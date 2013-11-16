@@ -11,11 +11,11 @@ public class send implements Runnable {
 	private byte[] bytes;
 	private byte[] output;
 
-	send(String serverName, int port, String input) {
-		this(serverName, port, input.getBytes());
+	send(String serverName, char oc, int port, String input) {
+		this(serverName, oc, port, input.getBytes());
 	}
 
-	send(String serverName, int port, File f) {
+	send(String serverName, char oc, int port, File f) {
 		this.serverName = serverName;
 		this.port = port;
 		try {
@@ -28,12 +28,13 @@ public class send implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		output = new byte[sha1hash.length + bytes.length];                        // Constructing buffer
+		output = new byte[sha1hash.length + 1 + bytes.length];                        // Constructing buffer
 		System.arraycopy(sha1hash, 0, output, 0, sha1hash.length);
-		System.arraycopy(bytes, 0, output, sha1hash.length, bytes.length);
+		output[40] = (byte) oc;
+		System.arraycopy(bytes, 0, output, sha1hash.length + 1, bytes.length);
 	}
 
-	send(String serverName, int port, byte[] input) {
+	send(String serverName, char oc, int port, byte[] input) {
 		this.serverName = serverName;
 		this.port = port;
 		bytes = input;
@@ -42,9 +43,10 @@ public class send implements Runnable {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-		output = new byte[sha1hash.length + bytes.length];                        // Constructing buffer
+		output = new byte[sha1hash.length + 1 + bytes.length];                        // Constructing buffer
 		System.arraycopy(sha1hash, 0, output, 0, sha1hash.length);
-		System.arraycopy(bytes, 0, output, sha1hash.length, bytes.length);
+		output[40] = (byte) oc;
+		System.arraycopy(bytes, 0, output, sha1hash.length + 1, bytes.length);
 	}
 
 	public void run() {
@@ -70,9 +72,9 @@ public class send implements Runnable {
 	}
 
 	public static void main(String[] args) {
-		File f = new File("C:\\Users\\Touch\\Desktop\\test.rar");
+		File f = new File("C:\\Users\\Touch\\Desktop\\mul.py");
 		try {
-			(new Thread(new send("127.0.0.1", 4444, f))).start();
+			(new Thread(new send("127.0.0.1", Utility.operationCode.UPLOAD, 4444, f))).start();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
