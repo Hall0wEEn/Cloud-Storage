@@ -2,7 +2,8 @@ package Server;
 
 import Utility.hash;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.net.Socket;
 
 public class clientHandler implements Runnable {
@@ -32,21 +33,20 @@ public class clientHandler implements Runnable {
 			byte[] bytes = new byte[byteLength];
 			in.readFully(bytes);
 			recvHash = (new String(bytes, "UTF-8")).substring(0, 40);
-			content = new byte[byteLength - 40];
-			System.arraycopy(bytes, 40, content, 0, content.length);
-			System.out.println(recvHash);
-			System.out.println(hash.sha1(content));
+			content = new byte[byteLength - 41];
+			System.arraycopy(bytes, 41, content, 0, content.length);
+//			System.out.println(recvHash);
+//			System.out.println(hash.sha1(content));
 			if (hash.sha1(content).equals(recvHash)) {
-				out.writeUTF("Okay");
-//				System.out.println(recv);
-				File f = new File("C:\\Users\\Touch\\Desktop\\test2.rar");
-				BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(f));
-				bos.write(content);
-				bos.flush();
-				bos.close();
+//				out.writeUTF("Okay");
+//				File f = new File("C:\\Users\\Touch\\Desktop\\test2.rar");
+//				BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(f));
+//				bos.write(content);
+//				bos.flush();
+//				bos.close();
+
 			} else {
 				out.writeUTF("Error");
-				System.out.println("Okay");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
