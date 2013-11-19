@@ -10,14 +10,16 @@ public class send implements Runnable {
 	private byte[] sha1hash;
 	private byte[] bytes;
 	private byte[] output;
+	private char oc;
 
-	send(String serverName, char oc, int port, String input) {
-		this(serverName, oc, port, input.getBytes());
+	public send(String serverName, int port, char oc, String input) {
+		this(serverName, port, oc, input.getBytes());
 	}
 
-	send(String serverName, char oc, int port, File f) {
+	send(String serverName, int port, char oc, File f) {
 		this.serverName = serverName;
 		this.port = port;
+		this.oc = oc;
 		try {
 			bytes = new byte[(int) f.length()];
 			FileInputStream fis = new FileInputStream(f);
@@ -34,9 +36,10 @@ public class send implements Runnable {
 		System.arraycopy(bytes, 0, output, sha1hash.length + 1, bytes.length);
 	}
 
-	send(String serverName, char oc, int port, byte[] input) {
+	send(String serverName, int port, char oc, byte[] input) {
 		this.serverName = serverName;
 		this.port = port;
+		this.oc = oc;
 		bytes = input;
 		try {
 			sha1hash = hash.sha1(bytes).getBytes();
@@ -74,7 +77,7 @@ public class send implements Runnable {
 	public static void main(String[] args) {
 		File f = new File("C:\\Users\\Touch\\Desktop\\mul.py");
 		try {
-			(new Thread(new send("127.0.0.1", Utility.operationCode.UPLOAD, 4444, f))).start();
+			(new Thread(new send("127.0.0.1", 4444, Utility.operationCode.UPLOAD, f))).start();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
