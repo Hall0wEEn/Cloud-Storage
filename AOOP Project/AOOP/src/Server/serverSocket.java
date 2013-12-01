@@ -18,11 +18,14 @@ public class serverSocket {
 			System.exit(0);
 		}
 
+		sessionManager sm = new sessionManager();
+
 		while (true) {
 			try {
 				Socket s = socket.accept();
 				System.out.println("New Client: " + s.getInetAddress().toString());
-				(new Thread(new clientHandler(s))).start();
+				Thread tmp = new Thread(new clientHandler(s, sm, "/Users/Touch/Desktop"));
+				tmp.start();
 			} catch (Exception e) {
 				System.out.println("Failed to accept client");
 			}
