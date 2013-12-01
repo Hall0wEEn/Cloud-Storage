@@ -2,41 +2,25 @@ package Server;
 
 import Utility.hash;
 import Utility.operationCode;
+import Utility.queryParser;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 
 public class clientHandler implements Runnable {
 	Socket socket;
 	DataInputStream in = null;
 	DataOutputStream out = null;
+	sessionManager sm;
+	Path DIR;
 
-	clientHandler(Socket sock) {
+	clientHandler(Socket sock, sessionManager sm, String path) {
 		socket = sock;
-	}
-
-	private String recv() throws Exception {
-		String data;
-		String recvhash;
-		String content;
-
-		while (true) {
-			int byteLength = in.readInt();
-			byte[] bytes = new byte[byteLength];
-			in.readFully(bytes);
-
-			data = new String(bytes, "UTF-8");
-			recvhash = data.substring(0, 40);
-			content = data.substring(40, data.length());
-			if (recvhash.equals(hash.sha1(content))) {
-				break;
-			}
-			out.writeUTF("Error");
-		}
-		return content;
+		this.sm = sm;
+		this.DIR = Paths.get(path);
 	}
 
 	private void send(String s) throws IOException {
@@ -47,7 +31,6 @@ public class clientHandler implements Runnable {
 	public void run() {
 		String data;
 		String tmp;
-		String recvHash;
 		byte[] content;
 		String user = "", passwd = "";
 		Connection connection;
@@ -69,12 +52,13 @@ public class clientHandler implements Runnable {
 			int byteLength = in.readInt();
 			byte[] bytes = new byte[byteLength];
 			in.readFully(bytes);
-			recvHash = (new String(bytes, "UTF-8")).substring(0, 40);
-			content = new byte[byteLength - 41];
-			System.arraycopy(bytes, 41, content, 0, content.length);
-			char oc = (char) bytes[40];
-//			System.out.println(recvHash);
-//			System.out.println(hash.sha1(content));
+
+
+			queryParser qp = new queryParser(bytes);
+			content = qp.getContent();
+			char oc = qp.get("oc").charAt(0);
+			String recvHash = qp.get("hash");
+
 			if (hash.sha1(content).equals(recvHash)) {
 //				out.writeUTF("Okay");
 //				File f = new File("C:\\Users\\Touch\\Desktop\\test2.rar");
@@ -97,8 +81,6 @@ public class clientHandler implements Runnable {
 							}
 						}
 
-						connection = null;
-
 						try {
 							connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/cloud", "auth", "imm@ninja");
 						} catch (SQLException e) {
@@ -116,6 +98,9 @@ public class clientHandler implements Runnable {
 
 						tmp = "insert into users values(\"" + user + "\", \"" + passwd + "\");";
 						statement.executeUpdate(tmp);
+						File dir = new File(DIR.toString() + "/" + user);
+						if (!dir.exists())
+							dir.mkdir();
 						out.writeUTF("Okay");
 
 						break;
@@ -144,14 +129,25 @@ public class clientHandler implements Runnable {
 						while (rs.next())
 							retpassword = rs.getString("password");
 
-						if (passwd.equals(retpassword))
-							out.writeUTF("Okay");
-						else
-							out.writeUTF("Incorrect password");
+						if (passwd.equals(retpassword)) {
+							System.out.println("Login successfully");
+							sm.createSession(user);
+							out.writeUTF(sm.getSessioin(user));
+						} else
+							out.writeUTF("Incorrect");
 						break;
 					case operationCode.LOGOUT:
+						user = new String(content, "UTF-8");
+						sm.destroySession(user);
 						break;
 					case operationCode.UPLOAD:
+						Path userPath = Paths.get(DIR.toString() + "/" + sm.check(Integer.parseInt(qp.get("session"))));
+						File file = new File(userPath + "/" + qp.get("fileName"));
+						BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+						bos.write(content);
+						bos.flush();
+
+						out.writeUTF("Okay");
 						break;
 					case operationCode.DOWNLOAD:
 						break;
@@ -164,6 +160,7 @@ public class clientHandler implements Runnable {
 			e.printStackTrace();
 		}
 
+
 	}
 
 	protected void finalize() {
@@ -173,4 +170,6 @@ public class clientHandler implements Runnable {
 			e.printStackTrace();
 		}
 	}
+
+
 }
