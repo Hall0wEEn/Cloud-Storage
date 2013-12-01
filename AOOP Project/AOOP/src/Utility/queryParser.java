@@ -14,13 +14,13 @@ public class queryParser {
 		value = new ArrayList<String>();
 	}
 
-	queryParser(byte[] s) {
+	public queryParser(byte[] s) {
 		key = new ArrayList<String>();
 		value = new ArrayList<String>();
 		String header = new String(s).split("\n\n")[0];
 		int headerLen = header.length();
-		data = new byte[s.length - headerLen];
-		System.arraycopy(s, headerLen + 2, data, 0, data.length - 2);
+		data = new byte[s.length - headerLen - 2];
+		System.arraycopy(s, headerLen + 2, data, 0, data.length);
 
 		String[] headers = header.split("\n");
 		String temp;
@@ -28,7 +28,7 @@ public class queryParser {
 		for (int i = 0; i < headers.length; i++) {
 			svalue = headers[i].split(":");
 			key.add(svalue[0]);
-			temp = headers[i].substring(svalue[0].length());
+			temp = headers[i].substring(svalue[0].length() + 1);
 			value.add(temp);
 		}
 	}
@@ -42,10 +42,12 @@ public class queryParser {
 	}
 
 	public void setContent(byte[] bytes) {
+//		System.out.println("set " + new String(bytes));
 		data = bytes;
 	}
 
 	public byte[] getContent() {
+//		System.out.println("get " + new String(data));
 		return data;
 	}
 
