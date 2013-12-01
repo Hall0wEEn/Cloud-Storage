@@ -9,15 +9,16 @@ public class newSend implements Runnable {
 	private String serverName;
 	private int port;
 	private String sha1hash;
+	private static String token = "";
+	private char oc;
 	private byte[] bytes;
 	private byte[] output;
-	private char oc;
 
-	public newSend(String serverName, int port, char oc, String input) {
-		this(serverName, port, oc, input.getBytes());
+	public newSend(String serverName, int port, char oc, String input, String session) {
+		this(serverName, port, oc, input.getBytes(), session);
 	}
 
-	newSend(String serverName, int port, char oc, File f) {
+	public newSend(String serverName, int port, char oc, File f) {
 		this.serverName = serverName;
 		this.port = port;
 		this.oc = oc;
@@ -35,31 +36,41 @@ public class newSend implements Runnable {
 		try {
 			qp.add("hash", sha1hash);
 			qp.add("cIP", InetAddress.getLocalHost().getHostAddress());
-			qp.add("session", Character.toString(oc));
+			qp.add("session", token);
 			qp.add("oc", Character.toString(oc));
-			qp.add("fileName", "test.txt");
-			qp.add("blockNo", "1");
-			qp.add("totalBlock", "10");
+			qp.add("fileName", f.getName());
+			qp.add("totalBlock", String.valueOf((f.length() / 1024) / 1024));
+
+			qp.setContent(bytes);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		output = qp.getBytes();
 	}
 
-	newSend(String serverName, int port, char oc, byte[] input) {
+	public newSend(String serverName, int port, char oc, byte[] input, String session) {
 		this.serverName = serverName;
 		this.port = port;
 		this.oc = oc;
-		bytes = input;
 		try {
-			sha1hash = hash.sha1(bytes).getBytes();
+			sha1hash = hash.sha1(input);
+//			System.out.println(sha1hash);
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-		output = new byte[sha1hash.length + 1 + bytes.length];                        // Constructing buffer
-		System.arraycopy(sha1hash, 0, output, 0, sha1hash.length);
-		output[40] = (byte) oc;
-		System.arraycopy(bytes, 0, output, sha1hash.length + 1, bytes.length);
+		queryParser qp = new queryParser();
+		try {
+			qp.add("hash", sha1hash);
+			qp.add("cIP", InetAddress.getLocalHost().getHostAddress());
+			if (!session.equals(""))
+				qp.add("session", token);
+			qp.add("oc", Character.toString(oc));
+
+			qp.setContent(input);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		output = qp.getBytes();
 	}
 
 	public void run() {
@@ -75,16 +86,36 @@ public class newSend implements Runnable {
 				System.out.println("Sending out");
 				InputStream inFromServer = sock.getInputStream();
 				DataInputStream in = new DataInputStream(inFromServer);
-				msg = in.readUTF();
-				if (msg.equals("Okay")) {
-					sock.close();
-					break;
-				} else if (msg.equals("Again")) {
-					continue;
+				System.out.println("Token : " + token);
+				if (oc == operationCode.LOGIN) {
+					msg = in.readUTF();
+					if (!msg.equals("Incorrect")) {
+						token = msg;
+						sock.close();
+						break;
+					}
+				} else if (oc == operationCode.LOGOUT) {
+					token = "";
+				} else if (oc == operationCode.DOWNLOAD) {
+
+				} else if (oc == operationCode.UPLOAD) {
+					msg = in.readUTF();
+					if (msg.equals("Okay")) {
+						sock.close();
+						break;
+					}
 				} else {
-					System.out.println(msg);
-					sock.close();
-					break;
+					msg = in.readUTF();
+					if (msg.equals("Okay")) {
+						sock.close();
+						break;
+					} else if (msg.equals("Again")) {
+						continue;
+					} else {
+						System.out.println(msg);
+						sock.close();
+						break;
+					}
 				}
 			}
 		} catch (Exception e) {
