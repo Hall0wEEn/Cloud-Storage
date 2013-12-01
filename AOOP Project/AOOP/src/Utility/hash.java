@@ -48,9 +48,19 @@ public class hash {
 	public static String sha1(byte[] bytes) throws Exception {
 		MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
 		Formatter formatter = new Formatter();
-		for (byte b : messageDigest.digest(bytes)) {
+		for (byte b : messageDigest.digest(bytes))
 			formatter.format("%02x", b);
-		}
+		return formatter.toString();
+	}
+
+	public static String sha1(byte[] bytes, int start, int end) throws Exception {
+		MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
+		Formatter formatter = new Formatter();
+		byte[] tmpBytes = new byte[end - start];
+		for (int i = start; i < end; i++)
+			tmpBytes[i] = bytes[i];
+		for (byte b : messageDigest.digest(tmpBytes))
+			formatter.format("%02x", b);
 		return formatter.toString();
 	}
 }
