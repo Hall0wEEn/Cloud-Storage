@@ -8,7 +8,7 @@ class Session {
 
 	Session(String username) {
 		user = username;
-		token = String.valueOf(username);
+		token = String.valueOf(user.hashCode());
 	}
 }
 
@@ -23,11 +23,27 @@ public class sessionManager {
 		session.remove(new Session(user));
 	}
 
-	public String check(String token) {
+	public String getSessioin(String user) {
+		for (Session s : session)
+			if (s.user.equals(user))
+				return s.token;
+		return null;
+	}
+
+	public String check(int token) {
+		String tok = String.valueOf(token);
 		for (Session s : session) {
-			if (s.token.equals(token))
+			if (s.token.equals(tok))
 				return s.user;
 		}
 		return null;
+	}
+
+	public String toString() {
+		String output = "";
+		for (Session ses : session) {
+			output += ses.user + ":" + ses.token + "\n";
+		}
+		return output;
 	}
 }
