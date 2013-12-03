@@ -14,4 +14,5 @@ public class operationCode {
 	public final static char LOGOUT = 0x03;
 	public final static char UPLOAD = 0x04;
 	public final static char DOWNLOAD = 0x05;
+	public final static char ALLHASH = 0x06;
 }
