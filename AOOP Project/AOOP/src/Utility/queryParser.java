@@ -9,9 +9,10 @@ public class queryParser {
 	ArrayList<String> key;
 	ArrayList<String> value;
 
-	queryParser() {
+	public queryParser() {
 		key = new ArrayList<String>();
 		value = new ArrayList<String>();
+		data = null;
 	}
 
 	public queryParser(byte[] s) {
