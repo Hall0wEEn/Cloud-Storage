@@ -3,6 +3,7 @@ package Server;
 import Utility.hash;
 import Utility.operationCode;
 import Utility.queryParser;
+import Utility.util;
 
 import java.io.*;
 import java.net.Socket;
@@ -15,12 +16,12 @@ public class clientHandler implements Runnable {
 	DataInputStream in = null;
 	DataOutputStream out = null;
 	sessionManager sm;
-	Path DIR;
+	Path HOME;
 
 	clientHandler(Socket sock, sessionManager sm, String path) {
 		socket = sock;
 		this.sm = sm;
-		this.DIR = Paths.get(path);
+		this.HOME = Paths.get(path);
 	}
 
 	private void send(String s) throws IOException {
@@ -98,7 +99,11 @@ public class clientHandler implements Runnable {
 
 						tmp = "insert into users values(\"" + user + "\", \"" + passwd + "\");";
 						statement.executeUpdate(tmp);
-						File dir = new File(DIR.toString() + "/" + user);
+						File dir;
+						if (util.isWin())
+							dir = new File(HOME.toString() + "\\" + user);
+						else
+							dir = new File(HOME.toString() + "/" + user);
 						if (!dir.exists())
 							dir.mkdir();
 						out.writeUTF("Okay");
@@ -141,15 +146,29 @@ public class clientHandler implements Runnable {
 						sm.destroySession(user);
 						break;
 					case operationCode.UPLOAD:
-						Path userPath = Paths.get(DIR.toString() + "/" + sm.check(Integer.parseInt(qp.get("session"))));
-						File file = new File(userPath + "/" + qp.get("fileName"));
+						Path userPath;
+						File file;
+						if (util.isWin()) {
+							userPath = Paths.get(HOME.toString() + "\\" + sm.check(Integer.parseInt(qp.get("session"))));
+							file = new File(userPath + "\\" + qp.get("fileName"));
+						} else {
+							userPath = Paths.get(HOME.toString() + "/" + sm.check(Integer.parseInt(qp.get("session"))));
+							file = new File(userPath + "/" + qp.get("fileName"));
+						}
+						file.getParentFile().mkdirs();
 						BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
 						bos.write(content);
 						bos.flush();
-
+						bos.close();
+						file.setLastModified(Long.parseLong(qp.get("lastModified")));
 						out.writeUTF("Okay");
 						break;
 					case operationCode.DOWNLOAD:
+
+						break;
+					case operationCode.ALLHASH:
+						userPath = Paths.get(HOME.toString() + "\\" + sm.check(Integer.parseInt(qp.get("session"))));
+						out.writeUTF(hash.allFiles(userPath));
 						break;
 				}
 
