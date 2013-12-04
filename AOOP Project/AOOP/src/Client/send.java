@@ -1,24 +1,39 @@
-package Utility;
+package Client;
+
+import Utility.hash;
+import Utility.operationCode;
+import Utility.queryParser;
 
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-public class newSend implements Runnable {
-	private Socket sock;
+public class send implements Runnable {
 	private String serverName;
 	private int port;
 	private String sha1hash;
-	private static String token = "";
+	private static String slash;
+	private static String TOKEN = "";
+	private static Path HOME;
 	private char oc;
 	private byte[] bytes;
 	private byte[] output;
 
-	public newSend(String serverName, int port, char oc, String input, String session) {
+	public send(String s) {
+		if (Utility.util.isWin())
+			slash = "\\";
+		else
+			slash = "/";
+		HOME = Paths.get(s);
+	}
+
+	public send(String serverName, int port, char oc, String input, String session) {
 		this(serverName, port, oc, input.getBytes(), session);
 	}
 
-	public newSend(String serverName, int port, char oc, File f) {
+	public send(String serverName, int port, char oc, File f) {
 		this.serverName = serverName;
 		this.port = port;
 		this.oc = oc;
@@ -32,13 +47,14 @@ public class newSend implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		queryParser qp = new queryParser();
+		Utility.queryParser qp = new Utility.queryParser();
 		try {
 			qp.add("hash", sha1hash);
 			qp.add("cIP", InetAddress.getLocalHost().getHostAddress());
-			qp.add("session", token);
+			qp.add("session", TOKEN);
 			qp.add("oc", Character.toString(oc));
 			qp.add("fileName", f.getName());
+			qp.add("lastModified", String.valueOf(f.lastModified()));
 			qp.add("totalBlock", String.valueOf((f.length() / 1024) / 1024));
 
 			qp.setContent(bytes);
@@ -48,7 +64,30 @@ public class newSend implements Runnable {
 		output = qp.getBytes();
 	}
 
-	public newSend(String serverName, int port, char oc, byte[] input, String session) {
+	public send(String serverName, int port, char oc) {
+		this.serverName = serverName;
+		this.port = port;
+		this.oc = oc;
+		try {
+			sha1hash = hash.sha1("ALLHASH");
+		} catch (Exception e) {
+			e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+		}
+		Utility.queryParser qp = new Utility.queryParser();
+		try {
+			qp.add("hash", sha1hash);
+			qp.add("cIP", InetAddress.getLocalHost().getHostAddress());
+			qp.add("session", TOKEN);
+			qp.add("oc", Character.toString(oc));
+
+			qp.setContent("ALLHASH".getBytes());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		output = qp.getBytes();
+	}
+
+	public send(String serverName, int port, char oc, byte[] input, String session) {
 		this.serverName = serverName;
 		this.port = port;
 		this.oc = oc;
@@ -63,7 +102,7 @@ public class newSend implements Runnable {
 			qp.add("hash", sha1hash);
 			qp.add("cIP", InetAddress.getLocalHost().getHostAddress());
 			if (!session.equals(""))
-				qp.add("session", token);
+				qp.add("session", TOKEN);
 			qp.add("oc", Character.toString(oc));
 
 			qp.setContent(input);
@@ -77,7 +116,7 @@ public class newSend implements Runnable {
 		String msg;
 		try {
 			while (true) {
-				sock = new Socket(serverName, port);                            // Connecting to server
+				Socket sock = new Socket(serverName, port);
 				System.out.println("Connecting to server");
 				OutputStream outToServer = sock.getOutputStream();
 				DataOutputStream out = new DataOutputStream(outToServer);
@@ -86,16 +125,16 @@ public class newSend implements Runnable {
 				System.out.println("Sending out");
 				InputStream inFromServer = sock.getInputStream();
 				DataInputStream in = new DataInputStream(inFromServer);
-				System.out.println("Token : " + token);
+				System.out.println("Token : " + TOKEN);
 				if (oc == operationCode.LOGIN) {
 					msg = in.readUTF();
 					if (!msg.equals("Incorrect")) {
-						token = msg;
+						TOKEN = msg;
 						sock.close();
 						break;
 					}
 				} else if (oc == operationCode.LOGOUT) {
-					token = "";
+					TOKEN = "";
 				} else if (oc == operationCode.DOWNLOAD) {
 
 				} else if (oc == operationCode.UPLOAD) {
@@ -104,6 +143,26 @@ public class newSend implements Runnable {
 						sock.close();
 						break;
 					}
+				} else if (oc == operationCode.ALLHASH) {
+					msg = in.readUTF();
+					String[] lines = msg.split("\n");
+					String[] tmp;
+					String hash;
+					long lastModified;
+					File file;
+					for (String line : lines) {
+						tmp = line.split(" ");
+						hash = tmp[0];
+						lastModified = Long.parseLong(tmp[1]);
+						file = new File(HOME + slash + tmp[2]);
+
+						if (file.lastModified() > lastModified)
+							(new Thread(new send("127.0.0.1", 4444, operationCode.UPLOAD, new File(file.toString())))).start();
+						else
+							(new Thread(new send("127.0.0.1", 4444, operationCode.DOWNLOAD, new File(tmp[3])))).start();
+					}
+
+					break;
 				} else {
 					msg = in.readUTF();
 					if (msg.equals("Okay")) {
@@ -118,15 +177,6 @@ public class newSend implements Runnable {
 					}
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public static void main(String[] args) {
-		File f = new File("C:\\Users\\Touch\\Desktop\\mul.py");
-		try {
-			(new Thread(new send("127.0.0.1", 4444, Utility.operationCode.UPLOAD, f))).start();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
