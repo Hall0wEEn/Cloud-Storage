@@ -6,7 +6,6 @@ import Utility.queryParser;
 import Utility.util;
 
 import java.io.*;
-import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.file.Path;
@@ -79,23 +78,44 @@ public class send implements Runnable {
 
 	public send(char oc) {
 		this.oc = oc;
-		try {
-			sha1hash = hash.sha1("ALLHASH");
-		} catch (Exception e) {
-			e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-		}
-		Utility.queryParser qp = new Utility.queryParser();
-		try {
-			qp.add("hash", sha1hash);
-			qp.add("cIP", InetAddress.getLocalHost().getHostAddress());
-			qp.add("session", TOKEN);
-			qp.add("oc", Character.toString(oc));
 
-			qp.setContent("ALLHASH".getBytes());
-		} catch (Exception e) {
-			e.printStackTrace();
+		if (oc == operationCode.ALLHASH) {
+
+			try {
+				sha1hash = hash.sha1("ALLHASH");
+			} catch (Exception e) {
+				e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+			}
+			Utility.queryParser qp = new Utility.queryParser();
+			try {
+				qp.add("hash", sha1hash);
+				qp.add("cIP", InetAddress.getLocalHost().getHostAddress());
+				qp.add("session", TOKEN);
+				qp.add("oc", Character.toString(oc));
+
+				qp.setContent("ALLHASH".getBytes());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			output = qp.getBytes();
+		} else if (oc == operationCode.HELO) {
+			try {
+				sha1hash = hash.sha1("HELO");
+			} catch (Exception e) {
+				e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+			}
+			Utility.queryParser qp = new Utility.queryParser();
+			try {
+				qp.add("hash", sha1hash);
+				qp.add("cIP", InetAddress.getLocalHost().getHostAddress());
+				qp.add("oc", Character.toString(oc));
+
+				qp.setContent("HELO".getBytes());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			output = qp.getBytes();
 		}
-		output = qp.getBytes();
 	}
 
 	public send(char oc, byte[] input, String session) {
@@ -140,6 +160,14 @@ public class send implements Runnable {
 						sock.close();
 						break;
 					}
+					throw new Exception("Username or Password is incorrect");
+				} else if (oc == operationCode.REGISTER) {
+					msg = in.readUTF();
+					if (msg.equals("Okay")) {
+						sock.close();
+						break;
+					}
+					throw new Exception("Username is unavailable");
 				} else if (oc == operationCode.LOGOUT) {
 					TOKEN = "";
 				} else if (oc == operationCode.DOWNLOAD) {
@@ -276,8 +304,6 @@ public class send implements Runnable {
 					}
 				}
 			}
-		} catch (ConnectException ce) {
-			System.err.println("Server is offline");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
