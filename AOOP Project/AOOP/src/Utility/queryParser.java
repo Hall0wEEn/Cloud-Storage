@@ -1,7 +1,5 @@
 package Utility;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class queryParser {
@@ -69,13 +67,5 @@ public class queryParser {
 		System.arraycopy(data, 0, output, outputS.length(), data.length);
 
 		return output;
-	}
-
-	public static void main(String[] args) {
-		try {
-			System.out.println(InetAddress.getLocalHost().getHostAddress());
-		} catch (UnknownHostException e) {
-			e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-		}
 	}
 }
