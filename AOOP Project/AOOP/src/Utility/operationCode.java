@@ -8,4 +8,6 @@ public class operationCode {
 	public final static char UPLOAD = 0x04;
 	public final static char DOWNLOAD = 0x05;
 	public final static char ALLHASH = 0x06;
+	public final static char DELETE = 0x07;
+	public final static char SPACE = 0x08;
 }
