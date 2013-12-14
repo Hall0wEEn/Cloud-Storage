@@ -1,15 +1,15 @@
 package Client;
 
+import Utility.operationCode;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 
 public class cGui {
 
@@ -161,7 +161,23 @@ public class cGui {
 		
 		lblCurStatus = new JLabel();
 		lblCurStatus.setBounds(95, 256, 61, 16);
-		setStatus("Online");
+		setStatus("Offline");
+		new send("127.0.0.1", 4444, "/Users/Touch/Desktop/cloud/client/");
+		Thread tmp = new Thread(new send(operationCode.HELO));
+		tmp.start();
+		try {
+			tmp.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		if (tmp.isInterrupted()) {
+			setStatus("Offline");
+			server = false;
+		} else {
+			setStatus("Online");
+			server = true;
+		}
+
 		frmCloudStorage.getContentPane().add(lblCurStatus);
 		
 		txtUsername = new JTextField();
@@ -235,7 +251,11 @@ public class cGui {
 		btnConfirm.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				confirmPressed();
+				try {
+					confirmPressed();
+				} catch (AWTException e1) {
+					e1.printStackTrace();
+				}
 			}
 		});
 		
@@ -325,7 +345,11 @@ public class cGui {
 			@Override
 			public void keyPressed(KeyEvent k) {
 				if (k.getKeyCode() == 10) {
-					confirmPressed();
+					try {
+						confirmPressed();
+					} catch (AWTException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		});
@@ -368,8 +392,15 @@ public class cGui {
 	}
 	
 	private void checkLogin () throws AWTException {
-		if (true) {
-			username = "Mon";
+		Thread t = new Thread(new send(operationCode.LOGIN, txtUsername.getText() + "|" + txtPassword.getText(), ""));
+		t.start();
+		try {
+			t.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		if (!t.isInterrupted()) {
+			username = txtUsername.getText();
 			setFolder();
 			gotoTray(false);
 		}
@@ -400,9 +431,29 @@ public class cGui {
 			checkLogin();
 		}		
 	}
-	
+
+	private void checkRegister() throws AWTException {
+		Thread t = new Thread(new send(operationCode.REGISTER, getUsername.getText() + "|" + getPassword.getText(), ""));
+		t.start();
+		try {
+			t.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		if (!t.isInterrupted()) {
+			username = txtUsername.getText();
+			setFolder();
+			gotoTray(false);
+		} else {
+			JOptionPane.showMessageDialog(frmCloudStorage, "Username is unavailable.", "Error", JOptionPane.ERROR_MESSAGE);
+			setTxtNormal(frmCloudStorage, txtUsername, lblUsername);
+			setPwdNormal(frmCloudStorage, txtPassword, lblPassword);
+			txtUsername.requestFocus();
+		}
+	}
+
 	@SuppressWarnings("deprecation")
-	private void confirmPressed () {
+	private void confirmPressed() throws AWTException {
 		if (getUsername.getText().equals("") && getPassword.getText().equals("")) {
 			JOptionPane.showMessageDialog(frmRegister, "Username and Password are empty!", "Error", JOptionPane.ERROR_MESSAGE);
 			getUsername.requestFocus();
@@ -420,7 +471,7 @@ public class cGui {
 			pwdNotMatch();
 		}
 		else {
-			
+			checkRegister();
 		}
 	}
 

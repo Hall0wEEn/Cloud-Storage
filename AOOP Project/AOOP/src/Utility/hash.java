@@ -10,10 +10,13 @@ public class hash {
 	public static String sha1(final File file) throws Exception {
 		MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
 
+		if (!file.exists())
+			return null;
+
 		try {
 			InputStream is = new BufferedInputStream(new FileInputStream(file));
 			byte[] buffer = new byte[1024];
-			for (int read = 0; (read = is.read(buffer)) != -1; ) {
+			for (int read; (read = is.read(buffer)) != -1; ) {
 				messageDigest.update(buffer, 0, read);
 			}
 
@@ -33,7 +36,7 @@ public class hash {
 		try {
 			InputStream is = new ByteArrayInputStream(input.getBytes());
 			byte[] buffer = new byte[1024];
-			for (int read = 0; (read = is.read(buffer)) != -1; ) {
+			for (int read; (read = is.read(buffer)) != -1; ) {
 				messageDigest.update(buffer, 0, read);
 			}
 
@@ -59,8 +62,7 @@ public class hash {
 		MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
 		Formatter formatter = new Formatter();
 		byte[] tmpBytes = new byte[end - start];
-		for (int i = start; i < end; i++)
-			tmpBytes[i] = bytes[i];
+		System.arraycopy(bytes, start, tmpBytes, start, end - start);
 		for (byte b : messageDigest.digest(tmpBytes))
 			formatter.format("%02x", b);
 		return formatter.toString();
@@ -79,6 +81,8 @@ public class hash {
 				output += allFiles(tmpFile, rootLen);
 		} else {
 			try {
+				if (util.getExt(file).equals("part") || file.getName().charAt(0) == '.')
+					return "";
 				return sha1(file) + " " + file.lastModified() + " " + file.getAbsolutePath().substring(rootLen) + "\n";
 			} catch (Exception e) {
 				e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -88,6 +92,6 @@ public class hash {
 	}
 
 	public static void main(String[] args) {
-		System.out.println(allFiles(Paths.get("C:\\Users\\Touch\\Desktop\\BoL")));
+		System.out.println(allFiles(Paths.get("/Users/Touch/Desktop/cloud")));
 	}
 }
