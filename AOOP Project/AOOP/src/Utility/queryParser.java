@@ -26,10 +26,10 @@ public class queryParser {
 		String[] headers = header.split("\n");
 		String temp;
 		String[] svalue;
-		for (int i = 0; i < headers.length; i++) {
-			svalue = headers[i].split(":");
+		for (String header1 : headers) {
+			svalue = header1.split(":");
 			key.add(svalue[0]);
-			temp = headers[i].substring(svalue[0].length() + 1);
+			temp = header1.substring(svalue[0].length() + 1);
 			value.add(temp);
 		}
 	}
