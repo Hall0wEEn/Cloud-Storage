@@ -54,7 +54,6 @@ public class clientHandler implements Runnable {
 			byte[] bytes = new byte[byteLength];
 			in.readFully(bytes);
 
-
 			queryParser qp = new queryParser(bytes);
 			content = qp.getContent();
 			char oc = qp.get("oc").charAt(0);
