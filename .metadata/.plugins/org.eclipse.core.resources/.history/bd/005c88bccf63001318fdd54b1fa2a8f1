@@ -1,6 +1,7 @@
 package Client;
 
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -10,37 +11,24 @@ import java.awt.event.*;
 
 public class cGui {
 
-	/**
-	 * Main Window
-	 */
 	private JFrame frmCloudStorage;
 	private JLabel lblStatus;
 	private JLabel lblCurStatus;
+	private boolean server = false;
 	private JTextField txtUsername;
 	private JPasswordField txtPassword;
-	private JLabel lblPassword;
-	private JLabel lblUsername;
 	
 	/**
 	 * Register Window
 	 */
-	private JFrame frmRegister;
+	private final JFrame frmRegister = new JFrame();
 	private JTextField getUsername;
 	private JPasswordField getPassword;
 	private JPasswordField confirmPassword;
-	private JLabel lblUsername_2;
-	private JLabel lblPassword_2;
-	private JLabel lblConfirm;
 
+	
 	/**
-	 * Others
-	 */
-	private final Font bFont;
-	private final Font sFont;
-	private boolean server = false;
-
-	/**
-	 * Screen Resolution
+	 * Get screen resolution
 	 */
 	private final int width;
 	private final int height;
@@ -48,7 +36,7 @@ public class cGui {
 	private int main_height;
 	private int register_width;
 	private int register_height;
-
+	private JLabel lblPassword;
 	/**
 	 * Launch the application.
 	 */
@@ -57,7 +45,7 @@ public class cGui {
 			public void run() {
 				try {
 					cGui window = new cGui();
-					//window.frmCloudStorage.setVisible(true);
+					window.frmCloudStorage.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -77,10 +65,6 @@ public class cGui {
 		register_width = (width / 2) - 225;
 		register_height = (height / 2) - 187;
 		checkScreenSize();
-
-		bFont = new Font("Lucida Grande", Font.PLAIN, 20);
-		sFont = new Font("Lucida Grande", Font.PLAIN, 16);
-
 		initialize();
 	}
 
@@ -94,12 +78,10 @@ public class cGui {
 		frmCloudStorage.getContentPane().setBackground(Color.WHITE);
 		frmCloudStorage.setBounds(main_width, main_height, 450, 300);
 		frmCloudStorage.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frmCloudStorage.getContentPane().setLayout(null);
-		frmCloudStorage.setVisible(true);
 		
 		JButton btnLogin = new JButton("Login");
 		btnLogin.setBounds(230, 195, 200, 40);
-		btnLogin.setFont(sFont);
+		btnLogin.setFont(new Font("Lucida Grande", Font.PLAIN, 16));
 		btnLogin.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -110,12 +92,19 @@ public class cGui {
 				}
 			}
 		});
+		frmCloudStorage.getContentPane().setLayout(null);
+		
+		lblPassword = new JLabel("Password");
+		lblPassword.setForeground(Color.LIGHT_GRAY);
+		lblPassword.setFont(new Font("Lucida Grande", Font.PLAIN, 20));
+		lblPassword.setBounds(81, 109, 139, 31);
+		frmCloudStorage.getContentPane().add(lblPassword);
 		simplifier(btnLogin);
 		frmCloudStorage.getContentPane().add(btnLogin);
 		
 		JButton btnRegister = new JButton("Register");
 		btnRegister.setBounds(20, 195, 200, 40);
-		btnRegister.setFont(sFont);
+		btnRegister.setFont(new Font("Lucida Grande", Font.PLAIN, 16));
 		btnRegister.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -128,18 +117,6 @@ public class cGui {
 		});
 		simplifier(btnRegister);
 		frmCloudStorage.getContentPane().add(btnRegister);
-
-		lblUsername = new JLabel("Username");
-		lblUsername.setForeground(Color.LIGHT_GRAY);
-		lblUsername.setFont(bFont);
-		lblUsername.setBounds(81, 34, 140, 30);
-		frmCloudStorage.getContentPane().add(lblUsername);
-
-		lblPassword = new JLabel("Password");
-		lblPassword.setForeground(Color.LIGHT_GRAY);
-		lblPassword.setFont(bFont);
-		lblPassword.setBounds(81, 109, 140, 30);
-		frmCloudStorage.getContentPane().add(lblPassword);
 		
 		lblStatus = new JLabel("Server Status:");
 		lblStatus.setBounds(6, 256, 85, 16);
@@ -152,19 +129,21 @@ public class cGui {
 		
 		txtUsername = new JTextField();
 		txtUsername.setBounds(75, 25, 300, 50);
-		txtUsername.setFont(bFont);
+		txtUsername.setFont(new Font("Lucida Grande", Font.PLAIN, 20));
 		txtUsername.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent arg0) {
-				frmCloudStorage.getContentPane().remove(lblUsername);
+				txtUsername.setForeground(Color.BLACK);
+				txtUsername.setText("");
 			}
 			@Override
 			public void focusLost(FocusEvent e) {
 				if (txtUsername.getText().equals("")) {
-					generateLabel(frmCloudStorage, txtUsername, lblUsername);
+					setTxtNormal(txtUsername);
 				}
 			}
 		});
+		setTxtNormal(txtUsername);
 		frmCloudStorage.getContentPane().add(txtUsername);
 		txtUsername.setColumns(10);
 		
@@ -182,37 +161,35 @@ public class cGui {
 				}
 			}
 		});
-		txtPassword.setFont(bFont);
+		txtPassword.setFont(new Font("Lucida Grande", Font.PLAIN, 20));
 		txtPassword.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent arg0) {
-				frmCloudStorage.getContentPane().remove(lblPassword);
+				txtPassword.setForeground(Color.BLACK);
+				txtPassword.setText("");
 			}
 			@SuppressWarnings("deprecation")
 			@Override
 			public void focusLost(FocusEvent e) {
 				if (txtPassword.getText().equals("")) {
-					generateLabel(frmCloudStorage, txtPassword, lblPassword);
+					setPwdNormal(txtPassword);
 				}
 			}
 		});
+		setPwdNormal(txtPassword);
 		frmCloudStorage.getContentPane().add(txtPassword);
 	}
 	
 	private void openRegisterWindow () {
 		frmCloudStorage.setVisible(false);
-		frmRegister = new JFrame();
 		frmRegister.getContentPane().setBackground(Color.WHITE);
 		frmRegister.getContentPane().setLayout(null);
 		frmRegister.setResizable(false);
 		frmRegister.setBounds(register_width, register_height, 450, 375);
-		frmRegister.setTitle("Register");
-		frmRegister.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frmRegister.setVisible(true);
 		
 		JButton btnConfirm = new JButton("Comfirm");
 		btnConfirm.setBounds(230, 270, 200, 40);
-		btnConfirm.setFont(sFont);
+		btnConfirm.setFont(new Font("Lucida Grande", Font.PLAIN, 16));
 		simplifier(btnConfirm);
 		frmRegister.getContentPane().add(btnConfirm);
 		btnConfirm.addMouseListener(new MouseAdapter() {
@@ -224,7 +201,7 @@ public class cGui {
 		
 		JButton btnCancel = new JButton("Cancle");
 		btnCancel.setBounds(20, 270, 200, 40);
-		btnCancel.setFont(sFont);
+		btnCancel.setFont(new Font("Lucida Grande", Font.PLAIN, 16));
 		simplifier(btnCancel);
 		frmRegister.getContentPane().add(btnCancel);
 		btnCancel.addMouseListener(new MouseAdapter() {
@@ -234,36 +211,20 @@ public class cGui {
 				frmCloudStorage.setVisible(true);
 			}
 		});
-
-		lblUsername_2 = new JLabel("Username");
-		lblUsername_2.setForeground(Color.LIGHT_GRAY);
-		lblUsername_2.setFont(bFont);
-		lblUsername_2.setBounds(81, 34, 140, 30);
-		frmRegister.getContentPane().add(lblUsername_2);
-
-		lblPassword_2 = new JLabel("Password");
-		lblPassword_2.setForeground(Color.LIGHT_GRAY);
-		lblPassword_2.setFont(bFont);
-		lblPassword_2.setBounds(81, 109, 140, 30);
-		frmRegister.getContentPane().add(lblPassword_2);
-
-		lblConfirm = new JLabel("Retype Password");
-		lblConfirm.setForeground(Color.LIGHT_GRAY);
-		lblConfirm.setFont(bFont);
-		lblConfirm.setBounds(81, 184, 180, 30);
-		frmRegister.getContentPane().add(lblConfirm);
 		
 		getUsername = new JTextField();
-		getUsername.setFont(bFont);
+		setTxtNormal(getUsername);
+		getUsername.setFont(new Font("Lucida Grande", Font.PLAIN, 20));
 		getUsername.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent arg0) {
-				frmRegister.getContentPane().remove(lblUsername_2);
+				getUsername.setForeground(Color.BLACK);
+				getUsername.setText("");
 			}
 			@Override
 			public void focusLost(FocusEvent e) {
 				if (getUsername.getText().equals("")) {
-					generateLabel(frmRegister, getUsername, lblUsername_2);
+					setTxtNormal(getUsername);
 				}
 			}
 		});
@@ -272,17 +233,19 @@ public class cGui {
 		frmRegister.getContentPane().add(getUsername);
 		
 		getPassword = new JPasswordField();
-		getPassword.setFont(bFont);
+		setPwdNormal(getPassword);
+		getPassword.setFont(new Font("Lucida Grande", Font.PLAIN, 20));
 		getPassword.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent arg0) {
-				frmRegister.getContentPane().remove(lblPassword_2);
+				getPassword.setForeground(Color.BLACK);
+				getPassword.setText("");
 			}
 			@SuppressWarnings("deprecation")
 			@Override
 			public void focusLost(FocusEvent e) {
 				if (getPassword.getText().equals("")) {
-					generateLabel(frmRegister, getPassword, lblPassword_2);
+					setPwdNormal(getPassword);
 				}
 			}
 		});
@@ -290,17 +253,19 @@ public class cGui {
 		frmRegister.getContentPane().add(getPassword);
 		
 		confirmPassword = new JPasswordField();
-		confirmPassword.setFont(bFont);
+		setPwdNormal(confirmPassword);
+		confirmPassword.setFont(new Font("Lucida Grande", Font.PLAIN, 20));
 		confirmPassword.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent arg0) {
-				frmRegister.getContentPane().remove(lblConfirm);
+				confirmPassword.setForeground(Color.BLACK);
+				confirmPassword.setText("");
 			}
 			@SuppressWarnings("deprecation")
 			@Override
 			public void focusLost(FocusEvent e) {
 				if (confirmPassword.getText().equals("")) {
-					generateLabel(frmRegister, confirmPassword, lblConfirm);
+					setPwdNormal(confirmPassword);
 				}
 			}
 		});
@@ -314,6 +279,10 @@ public class cGui {
 		});
 		confirmPassword.setBounds(75, 175, 300, 50);
 		frmRegister.getContentPane().add(confirmPassword);
+		
+		frmRegister.setTitle("Register");
+		frmRegister.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frmRegister.setVisible(true);
 	}
 	
 	private void checkScreenSize () {
@@ -339,25 +308,24 @@ public class cGui {
 			server = true;
 		}
 	}
-
-	private void setTxtNormal (JFrame frame, JTextField field, JLabel lbl) {
-		field.setText("");
-		generateLabel(frame, field, lbl);
+	
+	private void setTxtNormal (JTextField field) {
+		field.setForeground(Color.LIGHT_GRAY);
+		field.setText("Username");		
 	}
-
-	private void setPwdNormal (JFrame frame, JPasswordField field, JLabel lbl) {
-		field.setText("");
-		generateLabel(frame, field, lbl);
+	
+	private void setPwdNormal (JPasswordField field) {
+		field.setForeground(Color.LIGHT_GRAY);
 	}
 	
 	private void checkLogin () throws AWTException {
 		if (true) {
-			gotoTray(false);
+			gotoTray();
 		}
 		else {
 			JOptionPane.showMessageDialog(frmCloudStorage, "Username and Password does not match.", "Error", JOptionPane.ERROR_MESSAGE);
-			setTxtNormal(frmCloudStorage, txtUsername, lblUsername);
-			setPwdNormal(frmCloudStorage, txtPassword, lblPassword);
+			setTxtNormal(txtUsername);
+			setPwdNormal(txtPassword);
 			txtUsername.requestFocus();
 		}
 	}
@@ -365,18 +333,12 @@ public class cGui {
 	private void loginPressed () throws AWTException {
 		if (server == false)
 			JOptionPane.showMessageDialog(frmCloudStorage, "Server is offline!", "Error", JOptionPane.ERROR_MESSAGE);
-		else if (txtUsername.getText().equals("") && txtPassword.getText().equals("")) {
+		else if (txtUsername.getText().equals("") && txtPassword.getText().equals(""))
 			JOptionPane.showMessageDialog(frmCloudStorage, "Username and Password are empty!", "Error", JOptionPane.ERROR_MESSAGE);
-			txtUsername.requestFocus();
-		}
-		else if (txtUsername.getText().equals("")) {
+		else if (txtUsername.getText().equals(""))
 			JOptionPane.showMessageDialog(frmCloudStorage, "Username is empty!", "Error", JOptionPane.ERROR_MESSAGE);
-			txtUsername.requestFocus();
-		}
-		else if (txtPassword.getText().equals("")) {
+		else if (txtPassword.getText().equals(""))
 			JOptionPane.showMessageDialog(frmCloudStorage, "Password is empty!" , "Error", JOptionPane.ERROR_MESSAGE);
-			txtPassword.requestFocus();
-		}
 		else {
 			checkLogin();
 		}		
@@ -384,51 +346,22 @@ public class cGui {
 	
 	@SuppressWarnings("deprecation")
 	private void confirmPressed () {
-		if (getUsername.getText().equals("") && getPassword.getText().equals("")) {
+		if (getUsername.getText().equals("") && getPassword.getText().equals(""))
 			JOptionPane.showMessageDialog(frmRegister, "Username and Password are empty!", "Error", JOptionPane.ERROR_MESSAGE);
-			getUsername.requestFocus();
-		}
-		else if (getUsername.getText().equals("")) {
+		else if (getUsername.getText().equals(""))
 			JOptionPane.showMessageDialog(frmRegister, "Username is empty!", "Error", JOptionPane.ERROR_MESSAGE);
-			getUsername.requestFocus();
-		}
-		else if (getPassword.getText().equals("")) {
+		else if (getPassword.getText().equals(""))
 			JOptionPane.showMessageDialog(frmCloudStorage, "Password is empty!" , "Error", JOptionPane.ERROR_MESSAGE);
-			getPassword.requestFocus();
-		}
 		else if (!getPassword.getText().equals(confirmPassword.getText())) {
 			JOptionPane.showMessageDialog(frmRegister, "Password does not match!", "Error", JOptionPane.ERROR_MESSAGE);
-			pwdNotMatch();
 		}
 		else {
 			
 		}
 	}
-
-	private void pwdNotMatch () {
-		getPassword.setText("");
-		confirmPassword.setText("");
-		generateLabel(frmRegister, getPassword, lblPassword_2);
-		generateLabel(frmRegister, confirmPassword, lblConfirm);
-		getPassword.requestFocus();
-	}
-
-	private void generateLabel (JFrame frame, JTextField txtField, JLabel lbl) {
-		frame.getContentPane().remove(txtField);
-		frame.getContentPane().add(lbl);
-		frame.getContentPane().add(txtField);
-	}
-
-	private void generateLabel (JFrame frame, JPasswordField pwdField, JLabel lbl) {
-		frame.getContentPane().remove(pwdField);
-		frame.getContentPane().add(lbl);
-		frame.getContentPane().add(pwdField);
-	}
 	
-	private void gotoTray (boolean register) throws AWTException {
+	private void gotoTray () throws AWTException {
 		frmCloudStorage.dispose();
-		if (register == true)
-			frmRegister.dispose();
 		generateTray();
 	}
 
@@ -439,26 +372,6 @@ public class cGui {
 		itemName.setLabel("Mon");
 		itemName.setEnabled(false);
 		menu.add(itemName);
-
-		Menu about = new Menu();
-		about.setLabel("About Cloud Storage");
-		MenuItem version = new MenuItem();
-		version.setLabel("Version: 1.00");
-		version.setEnabled(false);
-		about.add(version);
-		MenuItem dev = new MenuItem();
-		dev.setLabel("Developed By:");
-		dev.setEnabled(false);
-		about.add(dev);
-		MenuItem dev1 = new MenuItem();
-		dev1.setLabel("\tPoomkawin Laosirirat");
-		dev1.setEnabled(false);
-		about.add(dev1);
-		MenuItem dev2 = new MenuItem();
-		dev2.setLabel("\tThanat Sirithawornsant");
-		dev2.setEnabled(false);
-		about.add(dev2);
-		menu.add(about);
 
 		MenuItem itemExit = new MenuItem("Exit");
 		itemExit.addActionListener(new ActionListener() {
