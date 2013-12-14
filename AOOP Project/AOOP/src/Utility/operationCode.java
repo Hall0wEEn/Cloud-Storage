@@ -1,7 +1,7 @@
 package Utility;
 
 public class operationCode {
-	public final static char HELO = 0xFF;
+	public final static char HELO = 0x10;
 	public final static char REGISTER = 0x01;
 	public final static char LOGIN = 0x02;
 	public final static char LOGOUT = 0x03;
