@@ -119,8 +119,6 @@ public class clientHandler implements Runnable {
 							}
 						}
 
-						connection = null;
-
 						try {
 							connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/cloud", "auth", "imm@ninja");
 						} catch (SQLException e) {
@@ -150,25 +148,107 @@ public class clientHandler implements Runnable {
 						File file;
 						if (util.isWin()) {
 							userPath = Paths.get(HOME.toString() + "\\" + sm.check(Integer.parseInt(qp.get("session"))));
-							file = new File(userPath + "\\" + qp.get("fileName"));
+							file = new File(userPath + "\\" + qp.get("fileName") + ".part");
 						} else {
 							userPath = Paths.get(HOME.toString() + "/" + sm.check(Integer.parseInt(qp.get("session"))));
-							file = new File(userPath + "/" + qp.get("fileName"));
+							file = new File(userPath + "/" + qp.get("fileName") + ".part");
 						}
 						file.getParentFile().mkdirs();
 						BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
-						bos.write(content);
-						bos.flush();
-						bos.close();
+//						System.out.println(hash.sha1(content));
+//						bos.write(content);
+//						bos.flush();
+//						bos.close();
+
+						int totalBlock = Integer.parseInt(qp.get("totalBlock"));
+						System.out.println(totalBlock);
+						byte[] tmpBytes = new byte[512 * 1024];
+						for (int i = 0; i <= totalBlock; i++) {
+							if (i == totalBlock)
+								tmpBytes = new byte[Integer.parseInt(qp.get("lastbSize"))];
+							System.out.println(i + 1 + " " + tmpBytes.length);
+							in.readFully(tmpBytes);
+							bos = new BufferedOutputStream(new FileOutputStream(file, true));
+							bos.write(tmpBytes);
+							bos.flush();
+							bos.close();
+						}
 						file.setLastModified(Long.parseLong(qp.get("lastModified")));
+						String newName = file.getName().substring(0, file.getName().length() - 5);
+						File newFile;
+						if (util.isWin())
+							newFile = new File(file.getParent() + "\\" + newName);
+						else
+							newFile = new File(file.getParent() + "/" + newName);
+
+						file.renameTo(newFile);
+
 						out.writeUTF("Okay");
 						break;
 					case operationCode.DOWNLOAD:
+						String fileName = new String(qp.getContent());
+						if (util.isWin()) {
+							userPath = Paths.get(HOME.toString() + "\\" + sm.check(Integer.parseInt(qp.get("session"))));
+							file = new File(userPath + "\\" + fileName);
+						} else {
+							userPath = Paths.get(HOME.toString() + "/" + sm.check(Integer.parseInt(qp.get("session"))));
+							file = new File(userPath + "/" + fileName);
+						}
 
+						out.writeUTF(hash.sha1(file));
+						out.writeLong(file.lastModified());
+						out.writeUTF(fileName);
+						out.writeLong(file.length() % (1024 * 512));
+						out.writeLong(file.length() / (1024 * 512));
+
+						bytes = new byte[512 * 1024];
+						FileInputStream fis = new FileInputStream(file);
+						int count;
+						while ((count = fis.read(bytes)) != -1) {
+							out.write(bytes, 0, count);
+							out.flush();
+						}
+						fis.close();
+
+						out.writeUTF("Okay");
 						break;
 					case operationCode.ALLHASH:
-						userPath = Paths.get(HOME.toString() + "\\" + sm.check(Integer.parseInt(qp.get("session"))));
+						if (util.isWin())
+							userPath = Paths.get(HOME.toString() + "\\" + sm.check(Integer.parseInt(qp.get("session"))));
+						else
+							userPath = Paths.get(HOME.toString() + "/" + sm.check(Integer.parseInt(qp.get("session"))));
 						out.writeUTF(hash.allFiles(userPath));
+						System.out.println(hash.allFiles(userPath));
+
+						break;
+					case operationCode.DELETE:
+						fileName = new String(qp.getContent());
+						if (util.isWin()) {
+							userPath = Paths.get(HOME.toString() + "\\" + sm.check(Integer.parseInt(qp.get("session"))));
+							file = new File(userPath + "\\" + fileName);
+						} else {
+							userPath = Paths.get(HOME.toString() + "/" + sm.check(Integer.parseInt(qp.get("session"))));
+							file = new File(userPath + "/" + fileName);
+						}
+
+						if (file.exists())
+							file.delete();
+
+						out.writeUTF("Okay");
+
+						break;
+					case operationCode.SPACE:
+						if (util.isWin()) {
+							userPath = Paths.get(HOME.toString() + "\\" + sm.check(Integer.parseInt(qp.get("session"))));
+							file = new File(userPath + "\\");
+						} else {
+							userPath = Paths.get(HOME.toString() + "/" + sm.check(Integer.parseInt(qp.get("session"))));
+							file = new File(userPath + "/");
+						}
+
+						String usedSpace = String.valueOf(util.folderSize(file));
+						out.writeUTF(usedSpace);
+						out.writeUTF("Okay");
 						break;
 				}
 
@@ -184,11 +264,12 @@ public class clientHandler implements Runnable {
 
 	protected void finalize() {
 		try {
+			super.finalize();
 			socket.close();
 		} catch (Exception e) {
 			e.printStackTrace();
+		} catch (Throwable throwable) {
+			throwable.printStackTrace();
 		}
 	}
-
-
 }
