@@ -567,7 +567,7 @@ public class cGui {
 		});
 		menu.add(itemExit);
 
-		Image trayimage = Toolkit.getDefaultToolkit().getImage("/Users/Mon/Desktop/Icon.png");
+		Image trayimage = Toolkit.getDefaultToolkit().getImage("Icon.png");
 		TrayIcon trayicon = new TrayIcon(trayimage, "Cloud Storage", menu);
 		SystemTray.getSystemTray().add(trayicon);
 	}
