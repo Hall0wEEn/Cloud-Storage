@@ -7,6 +7,9 @@ import javax.swing.border.EmptyBorder;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 public class cGui {
 
@@ -38,6 +41,9 @@ public class cGui {
 	private final Font bFont;
 	private final Font sFont;
 	private boolean server = false;
+	private String username;
+	private File path;
+	private double spaceused;
 
 	/**
 	 * Screen Resolution
@@ -69,6 +75,9 @@ public class cGui {
 	 * Create the application.
 	 */
 	public cGui() {
+		/**
+		 * Get screen resolution from System
+		 */
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 		width = (int) screen.getWidth();
 		height = (int) screen.getHeight();
@@ -78,8 +87,13 @@ public class cGui {
 		register_height = (height / 2) - 187;
 		checkScreenSize();
 
+		/**
+		 * Initialize variables
+		 */
 		bFont = new Font("Lucida Grande", Font.PLAIN, 20);
 		sFont = new Font("Lucida Grande", Font.PLAIN, 16);
+		username = "";
+		spaceused = 0;
 
 		initialize();
 	}
@@ -198,7 +212,10 @@ public class cGui {
 		});
 		frmCloudStorage.getContentPane().add(txtPassword);
 	}
-	
+
+	/**
+	 * Register window
+	 */
 	private void openRegisterWindow () {
 		frmCloudStorage.setVisible(false);
 		frmRegister = new JFrame();
@@ -352,6 +369,8 @@ public class cGui {
 	
 	private void checkLogin () throws AWTException {
 		if (true) {
+			username = "Mon";
+			setFolder();
 			gotoTray(false);
 		}
 		else {
@@ -432,13 +451,41 @@ public class cGui {
 		generateTray();
 	}
 
+	private void setFolder () {
+		System.out.println();
+		if (!username.equals("")) {
+			path = new File(System.getProperty("user.home") + "/Cloud Storage/" + username);
+			if (!path.exists()) {
+				path.mkdirs();
+			}
+		}
+	}
+
 	private void generateTray () throws AWTException {
 		PopupMenu menu = new PopupMenu();
 
-		MenuItem itemName = new MenuItem();
-		itemName.setLabel("Mon");
-		itemName.setEnabled(false);
-		menu.add(itemName);
+		Menu user = new Menu();
+		user.setLabel("Logged in as: " + username);
+		user.setEnabled(true);
+		MenuItem space = new MenuItem();
+		space.setLabel("Space Used: " + spaceused);
+		space.setEnabled(false);
+		user.add(space);
+		MenuItem folderpath = new MenuItem();
+		folderpath.setLabel("Open Cloud Storage folder");
+		folderpath.setEnabled(true);
+		folderpath.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					Desktop.getDesktop().open(path);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
+		user.add(folderpath);
+		menu.add(user);
 
 		Menu about = new Menu();
 		about.setLabel("About Cloud Storage");
