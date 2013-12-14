@@ -19,13 +19,13 @@ public class serverSocket {
 		}
 
 		sessionManager sm = new sessionManager();
+		System.out.println(System.getProperty("user.home"));
 
 		while (true) {
 			try {
 				Socket s = socket.accept();
 				System.out.println("New Client: " + s.getInetAddress().toString());
-				Thread tmp = new Thread(new clientHandler(s, sm, "C:\\Users\\Touch\\Desktop\\cloud"));
-				tmp.start();
+				(new Thread(new clientHandler(s, sm, "/Users/Touch/Desktop/cloud"))).start();
 			} catch (Exception e) {
 				System.out.println("Failed to accept client");
 			}
