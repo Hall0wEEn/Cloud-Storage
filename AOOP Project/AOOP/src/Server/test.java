@@ -26,7 +26,7 @@ public class test {
 //		}
 
 
-		System.out.println(Runtime.getRuntime().totalMemory());
+		System.out.println(Runtime.getRuntime().totalMemory() / 1000000);
 	}
 
 	private void test () {

@@ -1,20 +1,24 @@
 package Server;
 
-import sun.plugin2.gluegen.runtime.CPU;
-
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.table.TableCellRenderer;
 
 public class sGUI {
 
@@ -31,6 +35,7 @@ public class sGUI {
 	private JLabel lblStatus;
 	private JButton btnStart;
 	private JButton btnStop;
+	private JTable table;
 	
 	/**
 	 * Second TAB
@@ -42,6 +47,23 @@ public class sGUI {
 	private JLabel lblRAM;
 	private JLabel lblRAMStatus;
 	private JProgressBar RAMBar;
+
+	/**
+	 * Third TAB
+	 */
+	private JTextArea txtLog;
+	private JLabel lblLog;
+
+	/**
+	 * Table Data
+	 */
+	private DefaultTableModel model;
+	private String[] colName;
+	private String[][] data;
+	private ArrayList<String> username;
+	private ArrayList<String> IP;
+	private ArrayList<String> status;
+	private ArrayList<String> space;
 
 	/**
 	 * Other
@@ -57,7 +79,10 @@ public class sGUI {
 	private final int height;
 	private int main_width;
 	private int main_height;
-	private JTable table;
+	private JLabel lblHDD;
+	private JLabel lblHDDStatus;
+	private JProgressBar HDDBar;
+	private JScrollBar scrollLog;
 
 	/**
 	 * Launch the application.
@@ -94,6 +119,16 @@ public class sGUI {
 		 */
 		bFont = new Font("Lucida Grande", Font.PLAIN, 20);
 		sFont = new Font("Lucida Grande", Font.PLAIN, 16);
+
+		/**
+		 * Initialize Table Data
+		 */
+		colName = new String[]{"Client Username", "IP Address", "Status", "Space Used"};
+		data = new String[][]{{"TEST", "1111", "IDLE", "0.00"}};
+		username = new ArrayList<String>();
+		IP = new ArrayList<String>();
+		status = new ArrayList<String>();
+		space = new ArrayList<String>();
 
 		initialize();
 	}
@@ -173,10 +208,25 @@ public class sGUI {
 		simplifier(btnStop);
 		btnStop.setBounds(700, 75, 150, 30);
 		panel1.add(btnStop);
-		
-		table = new JTable();
-		table.setBounds(6, 130, 991, 564);
-		panel1.add(table);
+
+
+		model = new DefaultTableModel();
+		table = new JTable(model);
+		model.addColumn("Client Username");
+		model.addColumn("IP Address");
+		model.addColumn("Status");
+		model.addColumn("Space Used");
+		table.setEnabled(false);
+		table.setFont(sFont);
+		table.setSurrendersFocusOnKeystroke(true);
+		//table.setBounds(6, 130, 991, 564);                    // Do not need, use JScrollPane bounds instead
+		//panel1.add(table);
+
+		JScrollPane scrollTable = new JScrollPane(table);
+		scrollTable.setBounds(6, 130, 991, 564);
+		panel1.add(scrollTable);
+
+
 
 		/**
 		 * Second TAB
@@ -198,7 +248,7 @@ public class sGUI {
 
 		lblCPUStatus = new JLabel("");
 		lblCPUStatus.setFont(bFont);
-		lblCPUStatus.setBounds(250, 100, 500, 30);
+		lblCPUStatus.setBounds(250, 100, 700, 30);
 		panel2.add(lblCPUStatus);
 		
 		CPUBar = new JProgressBar();
@@ -206,16 +256,32 @@ public class sGUI {
 		panel2.add(CPUBar);
 
 		lblRAM = new JLabel("JVM Ram Usage");
+		lblRAM.setFont(bFont);
 		lblRAM.setBounds(30, 200, 200, 30);
 		panel2.add(lblRAM);
 
 		lblRAMStatus = new JLabel("");
-		lblRAMStatus.setBounds(250, 200, 500, 30);
+		lblRAMStatus.setFont(bFont);
+		lblRAMStatus.setBounds(250, 200, 700, 30);
 		panel2.add(lblRAMStatus);
 
 		RAMBar = new JProgressBar();
 		RAMBar.setBounds(30, 230, 945, 30);
 		panel2.add(RAMBar);
+
+		lblHDD = new JLabel("Hard Disk Space");
+		lblHDD.setFont(bFont);
+		lblHDD.setBounds(30, 300, 200, 30);
+		panel2.add(lblHDD);
+
+		lblHDDStatus = new JLabel("");
+		lblHDDStatus.setFont(bFont);
+		lblHDDStatus.setBounds(250, 300, 700, 30);
+		panel2.add(lblHDDStatus);
+
+		HDDBar = new JProgressBar();
+		HDDBar.setBounds(30, 330, 945, 30);
+		panel2.add(HDDBar);
 
 		/**
 		 * Third TAB
@@ -224,12 +290,17 @@ public class sGUI {
 		tabbedPane.addTab("Log", null, panel3, null);
 		panel3.setLayout(null);
 		
-		JTextPane txtLog = new JTextPane();
-		txtLog.setText("asdgas\nasdas\nasdg");
-		txtLog.setBounds(6, 62, 991, 632);
-		panel3.add(txtLog);
+		txtLog = new JTextArea();
+		txtLog.setEditable(false);
+		//txtLog.setBounds(6, 62, 991, 632);            // Do not need, setBounds to the JScrollPane instead
+		//panel3.add(txtLog);
+
+		JScrollPane scrollLog = new JScrollPane(txtLog);
+		//sbrText.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollLog.setBounds(6, 62, 991, 632);
+		panel3.add(scrollLog);
 		
-		JLabel lblLog = new JLabel("Log");
+		lblLog = new JLabel("Log");
 		lblLog.setFont(new Font("Lucida Grande", Font.PLAIN, 25));
 		lblLog.setHorizontalAlignment(SwingConstants.CENTER);
 		lblLog.setBounds(412, 20, 200, 30);
@@ -239,7 +310,7 @@ public class sGUI {
 		 * Call Threads
 		 */
 		(new Thread(new Date_Time(lblCurrentDate, lblCurrentTime))).start();
-		(new Thread(new SystemMonitor(CPUBar, lblCPUStatus))).start();
+		(new Thread(new SystemMonitor(CPUBar, lblCPUStatus, RAMBar, lblRAMStatus, HDDBar, lblHDDStatus))).start();
 		
 		/**
 		 * Server Status
@@ -277,6 +348,33 @@ public class sGUI {
 	private void stopPressed () {
 		serverAction("STOP");
 	}
+
+	private void addClient (String user, String ip, boolean sync, String space) {
+		String[] rowData = {user, ip, "IDLE", space};
+		model.addRow(rowData);
+		changeStage(user, sync);
+	}
+
+	private void removeClient (String user) {
+		for (int i = 0; i < model.getRowCount(); i++) {
+			if (user.equals(model.getValueAt(i, 0))) {
+				model.removeRow(i);
+			}
+		}
+	}
+
+	private void changeStage (String user, boolean sync) {
+		for (int i = 0; i < model.getRowCount(); i++) {
+			if (user.equals(model.getValueAt(i, 0))) {
+				if (sync) {
+					model.setValueAt("Syncing", i, 2);
+				}
+				else {
+					model.setValueAt("IDLE", i, 2);
+				}
+			}
+		}
+	}
 	
 	private static void simplifier(JButton button) {
 		button.setForeground(Color.WHITE);
@@ -293,18 +391,32 @@ public class sGUI {
 
 		private final OperatingSystemMXBean system;
 		private final double cores;
-		private double load;
+		private double CPUload;
 		private final File[] roots;
 		private double totalSpace;
 		private double usedSpace;
+		private double freeSpace;
+		private double HDDload;
 		private final double divide;
+		private double totalMemory;
+		private double usedMemory;
+		private double RAMload;
+		private double freeMemory;
 
 		private JProgressBar CPUBar;
 		private JLabel CPUStatus;
+		private JProgressBar RAMBar;
+		private JLabel RAMStatus;
+		private JProgressBar HDDBar;
+		private JLabel HDDStatus;
 
-		SystemMonitor (JProgressBar CPU, JLabel CPUStat) {
+		SystemMonitor (JProgressBar CPU, JLabel CPUStat, JProgressBar RAM, JLabel RAMStat, JProgressBar HDD, JLabel HDDStat) {
 			CPUBar = CPU;
 			CPUStatus = CPUStat;
+			RAMBar = RAM;
+			RAMStatus = RAMStat;
+			HDDBar = HDD;
+			HDDStatus = HDDStat;
 
 			system = ManagementFactory.getOperatingSystemMXBean();
 			cores = Runtime.getRuntime().availableProcessors();
@@ -322,16 +434,16 @@ public class sGUI {
 				/**
 				 * CPU Load
 				 */
-				load = system.getSystemLoadAverage() / cores * 100;
-				CPUBar.setValue((int) load);
-				CPUStatus.setText(String.format("%.2f", load) + '%');
-				if (load <= 25) {
+				CPUload = system.getSystemLoadAverage() / cores * 100;
+				CPUBar.setValue((int) CPUload);
+				CPUStatus.setText(String.format("%.2f", CPUload) + '%');
+				if (CPUload <= 25) {
 					CPUStatus.setForeground(Color.GREEN);
 				}
-				else if (load <= 50) {
+				else if (CPUload <= 50) {
 					CPUStatus.setForeground(Color.YELLOW);
 				}
-				else if (load <= 75) {
+				else if (CPUload <= 75) {
 					CPUStatus.setForeground(Color.ORANGE);
 				}
 				else {
@@ -339,11 +451,50 @@ public class sGUI {
 				}
 
 				/**
+				 * JVM RAM Usage
+				 */
+				totalMemory = Runtime.getRuntime().totalMemory() / 1000000.00;
+				freeMemory = Runtime.getRuntime().freeMemory() / 1000000.00;
+				usedMemory = totalMemory - freeMemory;
+				RAMload = usedMemory / totalMemory * 100.00;
+				RAMBar.setValue((int) RAMload);
+				RAMStatus.setText("Available " + String.format("%.2f", freeMemory) + "MB, Used " + String.format("%.2f", usedMemory) + "MB, Total " + String.format("%.2f", totalMemory) + "MB");
+				if (RAMload <= 25) {
+					RAMStatus.setForeground(Color.GREEN);
+				}
+				else if (RAMload <= 50) {
+					RAMStatus.setForeground(Color.YELLOW);
+				}
+				else if (RAMload <= 75) {
+					RAMStatus.setForeground(Color.ORANGE);
+				}
+				else {
+					RAMStatus.setForeground(Color.RED);
+				}
+
+
+				/**
 				 * Usable Space
 				 */
-				usedSpace = 0;
+				freeSpace = 0;
 				for (File root : roots) {
-					usedSpace += root.getUsableSpace() / divide;
+					freeSpace += root.getUsableSpace() / divide;
+				}
+				usedSpace = totalSpace - freeSpace;
+				HDDload = usedSpace / totalSpace * 100.00;
+				HDDBar.setValue((int) HDDload);
+				HDDStatus.setText("Available " + String.format("%.2f", freeSpace) + "GB, Used " + String.format("%.2f", usedSpace) + "GB, Total " + String.format("%.2f", totalSpace) + "GB");
+				if (HDDload <= 25) {
+					HDDStatus.setForeground(Color.GREEN);
+				}
+				else if (HDDload <= 50) {
+					HDDStatus.setForeground(Color.YELLOW);
+				}
+				else if (HDDload <= 75) {
+					HDDStatus.setForeground(Color.ORANGE);
+				}
+				else {
+					HDDStatus.setForeground(Color.RED);
 				}
 
 				try {
