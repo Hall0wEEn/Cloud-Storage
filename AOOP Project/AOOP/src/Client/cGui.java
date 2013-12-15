@@ -10,8 +10,11 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class cGui {
+	private String ip = "127.0.0.1";
+	private int port = 4444;
 
 	/**
 	 * Main Window
@@ -54,6 +57,9 @@ public class cGui {
 	private int main_height;
 	private int register_width;
 	private int register_height;
+
+	private MenuItem space;
+	private MenuItem speed;
 
 	/**
 	 * Launch the application.
@@ -162,15 +168,19 @@ public class cGui {
 		lblCurStatus = new JLabel();
 		lblCurStatus.setBounds(95, 256, 61, 16);
 		setStatus("Offline");
-		new send("127.0.0.1", 4444, "/Users/Touch/Desktop/cloud/client/");
-		Thread tmp = new Thread(new send(operationCode.HELO));
-		tmp.start();
+		(new File(System.getProperty("user.home") + "/" + "Cloud Storage")).mkdirs();
+		new send(ip, port, System.getProperty("user.home") + "/" + "Cloud Storage");
+		send tmp = new send(operationCode.HELO);
+
+		Thread tmpT = new Thread(tmp);
+
 		try {
-			tmp.join();
+			tmpT.start();
+			tmpT.join();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		if (tmp.isInterrupted()) {
+		if (!tmp.getStat()) {
 			setStatus("Offline");
 			server = false;
 		} else {
@@ -392,14 +402,17 @@ public class cGui {
 	}
 	
 	private void checkLogin () throws AWTException {
-		Thread t = new Thread(new send(operationCode.LOGIN, txtUsername.getText() + "|" + txtPassword.getText(), ""));
+		send tmp = new send(operationCode.LOGIN, txtUsername.getText() + "|" + txtPassword.getText(), "");
+		Thread t = new Thread(tmp);
 		t.start();
 		try {
 			t.join();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		if (!t.isInterrupted()) {
+		if (tmp.getStat()) {
+			(new File(System.getProperty("user.home") + "/" + "Cloud Storage" + "/" + txtUsername.getText())).mkdirs();
+			new send(ip, port, System.getProperty("user.home") + "/" + "Cloud Storage" + "/" + txtUsername.getText());
 			username = txtUsername.getText();
 			setFolder();
 			gotoTray(false);
@@ -433,17 +446,22 @@ public class cGui {
 	}
 
 	private void checkRegister() throws AWTException {
-		Thread t = new Thread(new send(operationCode.REGISTER, getUsername.getText() + "|" + getPassword.getText(), ""));
+		send tmp = new send(operationCode.REGISTER, getUsername.getText() + "|" + getPassword.getText(), "");
+		txtUsername.setText(getUsername.getText());
+		txtPassword.setText(getPassword.getText());
+		Thread t = new Thread(tmp);
 		t.start();
 		try {
 			t.join();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		if (!t.isInterrupted()) {
-			username = txtUsername.getText();
+		if (tmp.getStat()) {
+			(new File(System.getProperty("user.home") + "/" + "Cloud Storage" + "/" + txtUsername.getText())).mkdirs();
+			new send(ip, port, System.getProperty("user.home") + "/" + "Cloud Storage" + "/" + txtUsername.getText());
+			username = getUsername.getText();
 			setFolder();
-			gotoTray(false);
+			gotoTray(true);
 		} else {
 			JOptionPane.showMessageDialog(frmCloudStorage, "Username is unavailable.", "Error", JOptionPane.ERROR_MESSAGE);
 			setTxtNormal(frmCloudStorage, txtUsername, lblUsername);
@@ -497,9 +515,17 @@ public class cGui {
 	
 	private void gotoTray (boolean register) throws AWTException {
 		frmCloudStorage.dispose();
-		if (register == true)
+		if (register == true) {
 			frmRegister.dispose();
+			(new Thread(new send(operationCode.LOGIN, txtUsername.getText() + "|" + txtPassword.getText(), ""))).start();
+		}
 		generateTray();
+		(new Thread(new send(operationCode.ALLHASH))).start();
+		try {
+			(new Thread(new fileMonitor(Paths.get(System.getProperty("user.home") + "/Cloud Storage/" + txtUsername.getText()), this.space))).start();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void setFolder () {
@@ -518,10 +544,17 @@ public class cGui {
 		Menu user = new Menu();
 		user.setLabel("Logged in as: " + username);
 		user.setEnabled(true);
-		MenuItem space = new MenuItem();
+		space = new MenuItem();
 		space.setLabel("Space Used: " + spaceused);
 		space.setEnabled(false);
 		user.add(space);
+
+		speed = new MenuItem();
+		speed.setLabel("DL: 0 KB/s");
+		speed.setEnabled(false);
+		user.add(speed);
+		send.setMenuItem(speed);
+
 		MenuItem folderpath = new MenuItem();
 		folderpath.setLabel("Open Cloud Storage folder");
 		folderpath.setEnabled(true);
@@ -562,7 +595,7 @@ public class cGui {
 		itemExit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.exit(1);
+				System.exit(0);
 			}
 		});
 		menu.add(itemExit);
@@ -570,6 +603,16 @@ public class cGui {
 		Image trayimage = Toolkit.getDefaultToolkit().getImage("AOOP Project/AOOP/Icon.png");
 		TrayIcon trayicon = new TrayIcon(trayimage, "Cloud Storage", menu);
 		SystemTray.getSystemTray().add(trayicon);
+		try {
+			send tmp = new send(operationCode.SPACE, "", "");
+			Thread t = new Thread(tmp);
+			t.start();
+			t.join();
+			spaceused = Double.parseDouble(tmp.getUsedSpace());
+			space.setLabel("Space Used: " + (spaceused / (1000 * 1000)) + " MB");
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private static void simplifier(JButton button) {
