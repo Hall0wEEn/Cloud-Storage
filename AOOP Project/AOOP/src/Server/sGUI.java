@@ -1,28 +1,35 @@
 package Server;
 
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import javax.swing.table.TableCellRenderer;
+import java.io.File;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 public class sGUI {
 
 	private JFrame frmServer;
+
+	/**
+	 * Server Info
+	 */
+	private String ip = "127.0.0.1";
+	private int port = 4444;
+	private ServerSocket socket;
+	private boolean running = true;
+	private Thread t;
 
 	/**
 	 * First TAB
@@ -211,6 +218,7 @@ public class sGUI {
 
 
 		model = new DefaultTableModel();
+		clientHandler.setModel(model);
 		table = new JTable(model);
 		model.addColumn("Client Username");
 		model.addColumn("IP Address");
@@ -292,6 +300,7 @@ public class sGUI {
 		
 		txtLog = new JTextArea();
 		txtLog.setEditable(false);
+		clientHandler.setText(txtLog);
 		//txtLog.setBounds(6, 62, 991, 632);            // Do not need, setBounds to the JScrollPane instead
 		//panel3.add(txtLog);
 
@@ -343,45 +352,36 @@ public class sGUI {
 
 	private void startPressed () {
 		serverAction("START");
+		t = new Thread(new Runnable() {
+			public void run() {
+				running = true;
+				try {
+					socket = new ServerSocket(port);
+					System.out.println("Bound to port: " + port);
+				} catch (IOException e) {
+					System.out.println("Cannot bind to port: " + port);
+					System.exit(0);
+				}
+
+				sessionManager sm = new sessionManager();
+				System.out.println(System.getProperty("user.home"));
+				while (running) {
+					try {
+						Socket s = socket.accept();
+						System.out.println("New Client: " + s.getInetAddress().toString());
+						(new Thread(new clientHandler(s, sm, "/Users/Touch/Desktop/cloud"))).start();
+					} catch (Exception e) {
+						System.out.println("Failed to accept client");
+					}
+				}
+			}
+		});
+		t.start();
 	}
 
-	private void stopPressed () {
+	private void stopPressed() {
 		serverAction("STOP");
-	}
-
-	private void addClient (String user, String ip, boolean sync, long space) {
-		String[] rowData = {user, ip, "IDLE", String.format("%.2f", space)};
-		model.addRow(rowData);
-		changeStage(user, sync);
-	}
-
-	private void removeClient (String user) {
-		for (int i = 0; i < model.getRowCount(); i++) {
-			if (user.equals(model.getValueAt(i, 0))) {
-				model.removeRow(i);
-			}
-		}
-	}
-
-	private void changeStage (String user, boolean sync) {
-		for (int i = 0; i < model.getRowCount(); i++) {
-			if (user.equals(model.getValueAt(i, 0))) {
-				if (sync) {
-					model.setValueAt("Syncing", i, 2);
-				}
-				else {
-					model.setValueAt("IDLE", i, 2);
-				}
-			}
-		}
-	}
-
-	private void changeSpace (String user, double space) {
-		for (int i = 0; i < model.getRowCount(); i++) {
-			if (user.equals(model.getValueAt(i, 0))) {
-				model.setValueAt(String.format("%.2f", space), i, 3);
-			}
-		}
+		t.stop();
 	}
 	
 	private static void simplifier(JButton button) {

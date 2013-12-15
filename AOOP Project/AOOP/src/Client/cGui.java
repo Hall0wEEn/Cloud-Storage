@@ -544,6 +544,11 @@ public class cGui {
 	private void generateTray () throws AWTException {
 		PopupMenu menu = new PopupMenu();
 
+		/**
+		 * Logout
+		 */
+		Runtime.getRuntime().addShutdownHook(new Thread(new send(operationCode.LOGOUT, "")));
+
 		Menu user = new Menu();
 		user.setLabel("Logged in as: " + username);
 		user.setEnabled(true);

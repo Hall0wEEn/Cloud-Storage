@@ -5,11 +5,12 @@ import java.io.File;
 public class util {
 	public static long folderSize(File directory) {
 		long length = 0;
-		for (File file : directory.listFiles()) {
-			if (file.isFile())
-				length += file.length();
-			else
+		if (directory.isDirectory()) {
+			for (File file : directory.listFiles()) {
 				length += folderSize(file);
+			}
+		} else {
+			return directory.length();
 		}
 		return length;
 	}

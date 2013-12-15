@@ -5,6 +5,8 @@ import Utility.operationCode;
 import Utility.queryParser;
 import Utility.util;
 
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Path;
@@ -17,11 +19,60 @@ public class clientHandler implements Runnable {
 	DataOutputStream out = null;
 	sessionManager sm;
 	Path HOME;
+	static DefaultTableModel model;
+	static JTextArea text;
 
 	clientHandler(Socket sock, sessionManager sm, String path) {
 		socket = sock;
 		this.sm = sm;
 		this.HOME = Paths.get(path);
+	}
+
+	public static void setModel(DefaultTableModel model) {
+		clientHandler.model = model;
+	}
+
+	public static void setText(JTextArea text) {
+		clientHandler.text = text;
+	}
+
+	public String addDate() {
+		java.util.Date date = new java.util.Date();
+		return (new Timestamp(date.getTime())).toString() + " ";
+	}
+
+	private void addClient(String user, String ip, boolean sync, double space) {
+		String[] rowData = {user, ip, "IDLE", String.format("%.2f", space) + " MB"};
+		model.addRow(rowData);
+		changeStage(user, sync);
+	}
+
+	private void removeClient(String user) {
+		for (int i = 0; i < model.getRowCount(); i++) {
+			if (user.equals(model.getValueAt(i, 0))) {
+				model.removeRow(i);
+			}
+		}
+	}
+
+	private void changeSpace(String user, double space) {
+		for (int i = 0; i < model.getRowCount(); i++) {
+			if (user.equals(model.getValueAt(i, 0))) {
+				model.setValueAt(String.format("%.2f", space) + " MB", i, 3);
+			}
+		}
+	}
+
+	private void changeStage(String user, boolean sync) {
+		for (int i = 0; i < model.getRowCount(); i++) {
+			if (user.equals(model.getValueAt(i, 0))) {
+				if (sync) {
+					model.setValueAt("Syncing", i, 2);
+				} else {
+					model.setValueAt("IDLE", i, 2);
+				}
+			}
+		}
 	}
 
 	private void delete(File file) {
@@ -139,16 +190,35 @@ public class clientHandler implements Runnable {
 							System.out.println("Login successfully");
 							sm.createSession(user);
 							out.writeUTF(sm.getSessioin(user));
-						} else
+						} else {
 							out.writeUTF("Incorrect");
-						break;
-					case operationCode.LOGOUT:
-						user = new String(content, "UTF-8");
-						sm.destroySession(user);
-						break;
-					case operationCode.UPLOAD:
+							break;
+						}
+
 						Path userPath;
 						File file;
+						if (util.isWin()) {
+							userPath = Paths.get(HOME.toString() + "\\" + user);
+							file = new File(userPath + "\\");
+						} else {
+							userPath = Paths.get(HOME.toString() + "/" + user);
+							file = new File(userPath + "/");
+						}
+
+						long usedSpace = util.folderSize(file);
+
+						addClient(user, qp.get("cIP"), false, usedSpace / 1000000.00);
+						text.append(addDate() + user + " is logging in.\n");
+						break;
+					case operationCode.LOGOUT:
+						user = sm.check(Integer.parseInt(qp.get("session")));
+						sm.destroySession(user);
+						removeClient(user);
+						text.append(addDate() + user + " is logging out.\n");
+						break;
+					case operationCode.UPLOAD:
+						user = sm.check(Integer.parseInt(qp.get("session")));
+						changeStage(user, true);
 						if (util.isWin()) {
 							userPath = Paths.get(HOME.toString() + "\\" + sm.check(Integer.parseInt(qp.get("session"))));
 							file = new File(userPath + "\\" + qp.get("fileName") + ".part");
@@ -156,6 +226,7 @@ public class clientHandler implements Runnable {
 							userPath = Paths.get(HOME.toString() + "/" + sm.check(Integer.parseInt(qp.get("session"))));
 							file = new File(userPath + "/" + qp.get("fileName") + ".part");
 						}
+
 						file.getParentFile().mkdirs();
 						BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
 //						System.out.println(hash.sha1(content));
@@ -185,11 +256,21 @@ public class clientHandler implements Runnable {
 							newFile = new File(file.getParent() + "/" + newName);
 
 						file.renameTo(newFile);
+						text.append(addDate() + user + " is uploading " + newFile + ".\n");
 
 						out.writeUTF("Okay");
+
+						user = sm.check(Integer.parseInt(qp.get("session")));
+						usedSpace = util.folderSize(userPath.toFile());
+						System.out.println("Change to " + usedSpace);
+						changeSpace(user, usedSpace / 1000000.00);
+
+						changeStage(user, false);
 						break;
 					case operationCode.DOWNLOAD:
 						String fileName = new String(qp.getContent());
+						user = sm.check(Integer.parseInt(qp.get("session")));
+						changeStage(user, true);
 						if (util.isWin()) {
 							userPath = Paths.get(HOME.toString() + "\\" + sm.check(Integer.parseInt(qp.get("session"))));
 							file = new File(userPath + "\\" + fileName);
@@ -197,6 +278,8 @@ public class clientHandler implements Runnable {
 							userPath = Paths.get(HOME.toString() + "/" + sm.check(Integer.parseInt(qp.get("session"))));
 							file = new File(userPath + "/" + fileName);
 						}
+
+						text.append(addDate() + user + " is downloading " + file + ".\n");
 
 						out.writeUTF(hash.sha1(file));
 						out.writeLong(file.lastModified());
@@ -214,6 +297,11 @@ public class clientHandler implements Runnable {
 						fis.close();
 
 						out.writeUTF("Okay");
+
+						user = sm.check(Integer.parseInt(qp.get("session")));
+						usedSpace = util.folderSize(userPath.toFile());
+						changeSpace(user, usedSpace / 1000000.00);
+						changeStage(user, false);
 						break;
 					case operationCode.ALLHASH:
 						if (util.isWin())
@@ -222,6 +310,7 @@ public class clientHandler implements Runnable {
 							userPath = Paths.get(HOME.toString() + "/" + sm.check(Integer.parseInt(qp.get("session"))));
 						out.writeUTF(hash.allFiles(userPath));
 						out.writeUTF("Okay");
+
 						break;
 					case operationCode.DELETE:
 						fileName = new String(qp.getContent());
@@ -236,6 +325,12 @@ public class clientHandler implements Runnable {
 						delete(file);
 						file.delete();
 
+						user = sm.check(Integer.parseInt(qp.get("session")));
+						usedSpace = util.folderSize(userPath.toFile());
+						changeSpace(user, usedSpace / 1000000.00);
+
+						text.append(addDate() + user + " is deleting " + file + ".\n");
+
 						out.writeUTF("Okay");
 
 						break;
@@ -248,8 +343,8 @@ public class clientHandler implements Runnable {
 							file = new File(userPath + "/");
 						}
 
-						String usedSpace = String.valueOf(util.folderSize(file));
-						out.writeUTF(usedSpace);
+						String s = String.valueOf(util.folderSize(file));
+						out.writeUTF(s);
 						out.writeUTF("Okay");
 						break;
 				}

@@ -187,6 +187,7 @@ public class send implements Runnable {
 					break;
 				} else if (oc == operationCode.LOGOUT) {
 					TOKEN = "";
+					break;
 				} else if (oc == operationCode.DOWNLOAD) {
 					String hash = in.readUTF();
 					long lastModified = in.readLong();
