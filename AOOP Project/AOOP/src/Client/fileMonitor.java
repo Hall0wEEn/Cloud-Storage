@@ -158,7 +158,7 @@ public class fileMonitor implements Runnable {
 					uploadFiles(file);
 
 				} else if (kind == ENTRY_DELETE) {
-					t = new Thread(new send(operationCode.DELETE, file.getName(), ""));
+					t = new Thread(new send(operationCode.DELETE, file.getName()));
 					t.start();
 					try {
 						t.join();
@@ -169,7 +169,7 @@ public class fileMonitor implements Runnable {
 					if (child.toFile().exists())
 						t = new Thread(new send(operationCode.UPLOAD, file));
 					else
-						t = new Thread(new send(operationCode.DELETE, file.getName(), ""));
+						t = new Thread(new send(operationCode.DELETE, file.getName()));
 
 					t.start();
 					try {
@@ -181,7 +181,7 @@ public class fileMonitor implements Runnable {
 			}
 
 			try {
-				send tmp = new send(operationCode.SPACE, "", "");
+				send tmp = new send(operationCode.SPACE, "");
 				Thread t = new Thread(tmp);
 				t.start();
 				t.join();
