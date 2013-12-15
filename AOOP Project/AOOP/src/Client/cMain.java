@@ -2,8 +2,6 @@ package Client;
 
 import Utility.operationCode;
 
-import java.io.File;
-
 public class cMain {
 
 	public static void main(String[] args) {
@@ -23,8 +21,8 @@ public class cMain {
 //			(new Thread(new send(operationCode.SPACE, "", ""))).start();
 //			(new Thread(new send(operationCode.DELETE, "c.zip", ""))).start();
 //			(new Thread(new send(operationCode.DOWNLOAD, "test.txt", ""))).start();
-			(new Thread(new send(operationCode.UPLOAD, new File("/Users/Touch/Cloud Storage/test/intellij-13-keygen/keygen.class")))).start();
-//			(new Thread(new send(operationCode.ALLHASH))).start();
+//			(new Thread(new send(operationCode.UPLOAD, new File("/Users/Touch/Cloud Storage/test/intellij-13-keygen/keygen.class")))).start();
+			(new Thread(new send(operationCode.ALLHASH))).start();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
