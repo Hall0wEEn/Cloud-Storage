@@ -349,8 +349,8 @@ public class sGUI {
 		serverAction("STOP");
 	}
 
-	private void addClient (String user, String ip, boolean sync, String space) {
-		String[] rowData = {user, ip, "IDLE", space};
+	private void addClient (String user, String ip, boolean sync, long space) {
+		String[] rowData = {user, ip, "IDLE", String.format("%.2f", space)};
 		model.addRow(rowData);
 		changeStage(user, sync);
 	}
@@ -372,6 +372,14 @@ public class sGUI {
 				else {
 					model.setValueAt("IDLE", i, 2);
 				}
+			}
+		}
+	}
+
+	private void changeSpace (String user, double space) {
+		for (int i = 0; i < model.getRowCount(); i++) {
+			if (user.equals(model.getValueAt(i, 0))) {
+				model.setValueAt(String.format("%.2f", space), i, 3);
 			}
 		}
 	}
