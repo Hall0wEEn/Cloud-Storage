@@ -11,11 +11,11 @@ public class cMain {
 			System.out.println("Setting directory....");
 			new send("127.0.0.1", 4444, "/Users/Touch/Cloud Storage/test/");
 			System.out.println("Registering....");
-			Thread t = (new Thread(new send(operationCode.REGISTER, "test|test", "")));
+			Thread t = (new Thread(new send(operationCode.REGISTER, "test|test")));
 			t.start();
 			t.join();
 			System.out.println("Logging In");
-			t = (new Thread(new send(operationCode.LOGIN, "test|test", "")));
+			t = (new Thread(new send(operationCode.LOGIN, "test|test")));
 			t.start();
 			t.join();
 			System.out.println("Uploading file");
