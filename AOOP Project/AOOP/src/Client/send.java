@@ -207,7 +207,7 @@ public class send implements Runnable {
 						start = System.nanoTime();
 						bos.write(content);
 						bos.flush();
-						menuItem.setLabel("DL: " + (bytes.length * 1e9 / 1024 / 1024 / (System.nanoTime() - start)) + " MB/s");
+						menuItem.setLabel("DL: " + String.format("%.2f", content.length * 1e9 / 1024 / 1024 / (System.nanoTime() - start)) + " MB/s");
 						bos.close();
 					}
 					menuItem.setLabel("DL: 0 MB/s");
@@ -237,7 +237,7 @@ public class send implements Runnable {
 						start = System.nanoTime();
 						out.write(bytes, 0, count);
 						out.flush();
-						menuItem.setLabel("UL: " + (bytes.length * 1e9 / 1024 / 1024 / (System.nanoTime() - start)) + " MB/s");
+						menuItem.setLabel("UL: " + String.format("%.2f", bytes.length * 1e9 / 1024 / 1024 / (System.nanoTime() - start)) + " MB/s");
 					}
 					menuItem.setLabel("UL: 0 MB/s");
 					fis.close();

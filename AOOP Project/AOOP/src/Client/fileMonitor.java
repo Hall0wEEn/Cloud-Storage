@@ -186,7 +186,7 @@ public class fileMonitor implements Runnable {
 				t.start();
 				t.join();
 				double spaceused = Double.parseDouble(tmp.getUsedSpace());
-				menuItem.setLabel("Space Used: " + spaceused / (1000 * 1000) + "MB");
+				menuItem.setLabel("Space Used: " + String.format("%.2f", (spaceused / (1000 * 1000))) + " MB");
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

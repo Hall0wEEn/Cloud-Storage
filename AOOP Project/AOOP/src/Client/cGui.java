@@ -548,7 +548,7 @@ public class cGui {
 		user.setLabel("Logged in as: " + username);
 		user.setEnabled(true);
 		space = new MenuItem();
-		space.setLabel("Space Used: " + spaceused);
+		space.setLabel("Space Used: " + String.format("%.2f", spaceused));
 		space.setEnabled(false);
 		user.add(space);
 
@@ -612,7 +612,7 @@ public class cGui {
 			t.start();
 			t.join();
 			spaceused = Double.parseDouble(tmp.getUsedSpace());
-			space.setLabel("Space Used: " + (spaceused / (1000 * 1000)) + " MB");
+			space.setLabel("Space Used: " + String.format("%.2f", (spaceused / (1000 * 1000))) + " MB");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
