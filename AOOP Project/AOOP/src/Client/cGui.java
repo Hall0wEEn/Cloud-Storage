@@ -577,7 +577,7 @@ public class cGui {
 		Menu about = new Menu();
 		about.setLabel("About Cloud Storage");
 		MenuItem version = new MenuItem();
-		version.setLabel("Version: 1.00");
+		version.setLabel("Version: 2.00");
 		version.setEnabled(false);
 		about.add(version);
 		MenuItem dev = new MenuItem();
