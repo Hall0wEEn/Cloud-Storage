@@ -52,8 +52,8 @@ public class send implements Runnable {
 		HOME = Paths.get(s);
 	}
 
-	public send(char oc, String input, String session) {
-		this(oc, input.getBytes(), session);
+	public send(char oc, String input) {
+		this(oc, input.getBytes(), "");
 	}
 
 	public send(char oc, File f) {
@@ -274,7 +274,7 @@ public class send implements Runnable {
 							t.start();
 							t.join();
 						} else {
-							t = (new Thread(new send(operationCode.DOWNLOAD, fileName, "")));
+							t = (new Thread(new send(operationCode.DOWNLOAD, fileName)));
 							t.start();
 							t.join();
 						}
@@ -297,7 +297,7 @@ public class send implements Runnable {
 							continue;
 
 						if (util.getExt(file).equals("part")) {
-							t = (new Thread(new send(operationCode.DOWNLOAD, fileName, "")));
+							t = (new Thread(new send(operationCode.DOWNLOAD, fileName)));
 							t.start();
 							t.join();
 						} else {
