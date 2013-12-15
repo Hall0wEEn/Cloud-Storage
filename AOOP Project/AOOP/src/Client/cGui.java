@@ -142,7 +142,7 @@ public class cGui {
 		btnRegister.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if (server == false)
+				if (!server)
 					JOptionPane.showMessageDialog(frmCloudStorage, "Server is offline!", "Error", JOptionPane.ERROR_MESSAGE);
 				else {
 					openRegisterWindow();
@@ -163,7 +163,7 @@ public class cGui {
 		lblPassword.setFont(bFont);
 		lblPassword.setBounds(81, 109, 140, 30);
 		frmCloudStorage.getContentPane().add(lblPassword);
-		
+
 		lblStatus = new JLabel("Server Status:");
 		lblStatus.setBounds(6, 256, 85, 16);
 		frmCloudStorage.getContentPane().add(lblStatus);
@@ -405,7 +405,7 @@ public class cGui {
 	}
 	
 	private void checkLogin () throws AWTException {
-		send tmp = new send(operationCode.LOGIN, txtUsername.getText() + "|" + txtPassword.getText(), "");
+		send tmp = new send(operationCode.LOGIN, txtUsername.getText() + "|" + txtPassword.getText());
 		Thread t = new Thread(tmp);
 		t.start();
 		try {
@@ -429,7 +429,7 @@ public class cGui {
 	}
 	
 	private void loginPressed () throws AWTException {
-		if (server == false)
+		if (!server)
 			JOptionPane.showMessageDialog(frmCloudStorage, "Server is offline!", "Error", JOptionPane.ERROR_MESSAGE);
 		else if (txtUsername.getText().equals("") && txtPassword.getText().equals("")) {
 			JOptionPane.showMessageDialog(frmCloudStorage, "Username and Password are empty!", "Error", JOptionPane.ERROR_MESSAGE);
@@ -449,7 +449,7 @@ public class cGui {
 	}
 
 	private void checkRegister() throws AWTException {
-		send tmp = new send(operationCode.REGISTER, getUsername.getText() + "|" + getPassword.getText(), "");
+		send tmp = new send(operationCode.REGISTER, getUsername.getText() + "|" + getPassword.getText());
 		txtUsername.setText(getUsername.getText());
 		txtPassword.setText(getPassword.getText());
 		Thread t = new Thread(tmp);
@@ -518,9 +518,9 @@ public class cGui {
 	
 	private void gotoTray (boolean register) throws AWTException {
 		frmCloudStorage.dispose();
-		if (register == true) {
+		if (register) {
 			frmRegister.dispose();
-			(new Thread(new send(operationCode.LOGIN, txtUsername.getText() + "|" + txtPassword.getText(), ""))).start();
+			(new Thread(new send(operationCode.LOGIN, txtUsername.getText() + "|" + txtPassword.getText()))).start();
 		}
 		generateTray();
 		(new Thread(new send(operationCode.ALLHASH))).start();
@@ -607,7 +607,7 @@ public class cGui {
 		TrayIcon trayicon = new TrayIcon(trayimage, "Cloud Storage", menu);
 		SystemTray.getSystemTray().add(trayicon);
 		try {
-			send tmp = new send(operationCode.SPACE, "", "");
+			send tmp = new send(operationCode.SPACE, "");
 			Thread t = new Thread(tmp);
 			t.start();
 			t.join();
