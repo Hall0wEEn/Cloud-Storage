@@ -24,8 +24,12 @@ public class clientHandler implements Runnable {
 		this.HOME = Paths.get(path);
 	}
 
-	private void send(String s) throws IOException {
-		out.writeUTF(s);
+	private void delete(File file) {
+		if (file.isDirectory())
+			for (File tmp : file.listFiles())
+				delete(tmp);
+		else
+			file.delete();
 	}
 
 	@Override
@@ -217,8 +221,7 @@ public class clientHandler implements Runnable {
 						else
 							userPath = Paths.get(HOME.toString() + "/" + sm.check(Integer.parseInt(qp.get("session"))));
 						out.writeUTF(hash.allFiles(userPath));
-						System.out.println(hash.allFiles(userPath));
-
+						out.writeUTF("Okay");
 						break;
 					case operationCode.DELETE:
 						fileName = new String(qp.getContent());
@@ -230,8 +233,8 @@ public class clientHandler implements Runnable {
 							file = new File(userPath + "/" + fileName);
 						}
 
-						if (file.exists())
-							file.delete();
+						delete(file);
+						file.delete();
 
 						out.writeUTF("Okay");
 

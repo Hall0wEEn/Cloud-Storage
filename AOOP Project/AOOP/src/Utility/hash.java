@@ -2,7 +2,6 @@ package Utility;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.util.Formatter;
 
@@ -89,9 +88,5 @@ public class hash {
 			}
 		}
 		return output;
-	}
-
-	public static void main(String[] args) {
-		System.out.println(allFiles(Paths.get("/Users/Touch/Desktop/cloud")));
 	}
 }

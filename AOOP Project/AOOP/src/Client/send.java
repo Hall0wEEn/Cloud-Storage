@@ -5,6 +5,7 @@ import Utility.operationCode;
 import Utility.queryParser;
 import Utility.util;
 
+import java.awt.*;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -25,6 +26,21 @@ public class send implements Runnable {
 	private char oc;
 	private byte[] bytes;
 	private byte[] output;
+	private boolean stat = false;
+	private String usedSpace = "";
+	private static MenuItem menuItem;
+
+	public boolean getStat() {
+		return stat;
+	}
+
+	public String getUsedSpace() {
+		return usedSpace;
+	}
+
+	public static void setMenuItem(MenuItem menuItem) {
+		send.menuItem = menuItem;
+	}
 
 	public send(String serverName, int port, String s) {
 		this.serverName = serverName;
@@ -36,8 +52,8 @@ public class send implements Runnable {
 		HOME = Paths.get(s);
 	}
 
-	public send(char oc, String input, String session) {
-		this(oc, input.getBytes(), session);
+	public send(char oc, String input) {
+		this(oc, input.getBytes(), "");
 	}
 
 	public send(char oc, File f) {
@@ -63,7 +79,7 @@ public class send implements Runnable {
 			qp.add("cIP", InetAddress.getLocalHost().getHostAddress());
 			qp.add("session", TOKEN);
 			qp.add("oc", Character.toString(oc));
-			qp.add("fileName", f.getName());
+			qp.add("fileName", uName.substring(HOME.toString().length()));
 			qp.add("lastModified", String.valueOf(f.lastModified()));
 			qp.add("lastbSize", String.valueOf(f.length() % (1024 * 512)));
 			qp.add("totalBlock", String.valueOf(f.length() / (1024 * 512)));
@@ -156,18 +172,19 @@ public class send implements Runnable {
 				if (oc == operationCode.LOGIN) {
 					msg = in.readUTF();
 					if (!msg.equals("Incorrect")) {
+						stat = true;
 						TOKEN = msg;
-						sock.close();
-						break;
 					}
-					throw new Exception("Username or Password is incorrect");
+					sock.close();
+					break;
 				} else if (oc == operationCode.REGISTER) {
 					msg = in.readUTF();
+					System.out.println(msg);
 					if (msg.equals("Okay")) {
-						sock.close();
-						break;
+						stat = true;
 					}
-					throw new Exception("Username is unavailable");
+					sock.close();
+					break;
 				} else if (oc == operationCode.LOGOUT) {
 					TOKEN = "";
 				} else if (oc == operationCode.DOWNLOAD) {
@@ -180,16 +197,20 @@ public class send implements Runnable {
 					long lastbSize = in.readLong();
 					long totalBlocks = in.readLong();
 					BufferedOutputStream bos;
+					long start;
 
 					for (int i = 0; i <= totalBlocks; i++) {
 						bos = new BufferedOutputStream(new FileOutputStream(file, true));
 						if (i == totalBlocks)
 							content = new byte[(int) lastbSize];
 						in.readFully(content);
+						start = System.nanoTime();
 						bos.write(content);
 						bos.flush();
+						menuItem.setLabel("DL: " + String.format("%.2f", content.length * 1e9 / 1024 / 1024 / (System.nanoTime() - start)) + " MB/s");
 						bos.close();
 					}
+					menuItem.setLabel("DL: 0 MB/s");
 					file.setLastModified(lastModified);
 
 					msg = in.readUTF();
@@ -207,16 +228,19 @@ public class send implements Runnable {
 					}
 				} else if (oc == operationCode.UPLOAD) {
 					File f = new File(uName);
-					if ((f.length() / 1024) / 512 != 0) {
-						FileInputStream fis = new FileInputStream(f);
-						byte[] bytes = new byte[512 * 1024];
-						int count;
-						while ((count = fis.read(bytes)) != -1) {
-							out.write(bytes, 0, count);
-							out.flush();
-						}
-						fis.close();
+					System.out.println(f.length());
+					FileInputStream fis = new FileInputStream(f);
+					byte[] bytes = new byte[512 * 1024];
+					int count;
+					long start;
+					while ((count = fis.read(bytes)) != -1) {
+						start = System.nanoTime();
+						out.write(bytes, 0, count);
+						out.flush();
+						menuItem.setLabel("UL: " + String.format("%.2f", bytes.length * 1e9 / 1024 / 1024 / (System.nanoTime() - start)) + " MB/s");
 					}
+					menuItem.setLabel("UL: 0 MB/s");
+					fis.close();
 					msg = in.readUTF();
 					if (msg.equals("Okay")) {
 						sock.close();
@@ -226,6 +250,8 @@ public class send implements Runnable {
 					Thread t;
 					msg = in.readUTF();
 					String[] lines = msg.split("\n");
+					if (msg.equals(""))
+						break;
 					String[] tmp;
 					String fileName;
 					long lastModified;
@@ -248,7 +274,7 @@ public class send implements Runnable {
 							t.start();
 							t.join();
 						} else {
-							t = (new Thread(new send(operationCode.DOWNLOAD, fileName, "")));
+							t = (new Thread(new send(operationCode.DOWNLOAD, fileName)));
 							t.start();
 							t.join();
 						}
@@ -261,7 +287,7 @@ public class send implements Runnable {
 							list.remove(line);
 					}
 
-					for (String line : locallines) {
+					for (String line : list) {
 						tmp = line.split(" ");
 						fileName = line.substring(line.indexOf(' ', line.indexOf(' ') + 1) + 1);
 						System.out.println(fileName);
@@ -271,7 +297,7 @@ public class send implements Runnable {
 							continue;
 
 						if (util.getExt(file).equals("part")) {
-							t = (new Thread(new send(operationCode.DOWNLOAD, fileName, "")));
+							t = (new Thread(new send(operationCode.DOWNLOAD, fileName)));
 							t.start();
 							t.join();
 						} else {
@@ -281,9 +307,14 @@ public class send implements Runnable {
 						}
 					}
 
+					msg = in.readUTF();
+					if (msg.equals("Okay")) {
+						sock.close();
+						break;
+					}
+
 				} else if (oc == operationCode.SPACE) {
-					String usedSpace = in.readUTF();
-					System.out.println(usedSpace);
+					usedSpace = in.readUTF();
 
 					msg = in.readUTF();
 					if (msg.equals("Okay")) {
@@ -291,6 +322,7 @@ public class send implements Runnable {
 						break;
 					}
 				} else {
+					stat = true;
 					msg = in.readUTF();
 					if (msg.equals("Okay")) {
 						sock.close();
