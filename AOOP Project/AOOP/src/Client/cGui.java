@@ -58,6 +58,9 @@ public class cGui {
 	private int register_width;
 	private int register_height;
 
+	/**
+	 * Tray Icon
+	 */
 	private MenuItem space;
 	private MenuItem speed;
 
