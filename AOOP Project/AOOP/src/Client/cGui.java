@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 public class cGui {
-	private String ip = "127.0.0.1";
+	private String ip = "169.254.144.117";
 	private int port = 4444;
 
 	/**
