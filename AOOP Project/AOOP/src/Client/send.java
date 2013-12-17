@@ -146,8 +146,7 @@ public class send implements Runnable {
 		try {
 			qp.add("hash", sha1hash);
 			qp.add("cIP", InetAddress.getLocalHost().getHostAddress());
-			if (session.equals(""))
-				qp.add("session", TOKEN);
+			qp.add("session", TOKEN);
 			qp.add("oc", Character.toString(oc));
 
 			qp.setContent(input);
@@ -162,6 +161,7 @@ public class send implements Runnable {
 		try {
 			while (true) {
 				Socket sock = new Socket(serverName, port);
+				System.out.println("TOKEN : " + TOKEN);
 //				System.out.println("Connecting to server");
 				OutputStream outToServer = sock.getOutputStream();
 				DataOutputStream out = new DataOutputStream(outToServer);
@@ -169,6 +169,7 @@ public class send implements Runnable {
 				out.write(output);
 				InputStream inFromServer = sock.getInputStream();
 				DataInputStream in = new DataInputStream(inFromServer);
+
 				if (oc == operationCode.LOGIN) {
 					msg = in.readUTF();
 					if (!msg.equals("Incorrect")) {
@@ -179,7 +180,6 @@ public class send implements Runnable {
 					break;
 				} else if (oc == operationCode.REGISTER) {
 					msg = in.readUTF();
-					System.out.println(msg);
 					if (msg.equals("Okay")) {
 						stat = true;
 					}
@@ -187,6 +187,7 @@ public class send implements Runnable {
 					break;
 				} else if (oc == operationCode.LOGOUT) {
 					TOKEN = "";
+					sock.close();
 					break;
 				} else if (oc == operationCode.DOWNLOAD) {
 					String hash = in.readUTF();
