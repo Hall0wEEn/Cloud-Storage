@@ -517,11 +517,17 @@ public class cGui {
 	}
 	
 	private void gotoTray (boolean register) throws AWTException {
-		frmCloudStorage.dispose();
 		if (register) {
+			Thread tmp = new Thread(new send(operationCode.LOGIN, txtUsername.getText() + "|" + txtPassword.getText()));
+			tmp.start();
+			try {
+				tmp.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			frmRegister.dispose();
-			(new Thread(new send(operationCode.LOGIN, txtUsername.getText() + "|" + txtPassword.getText()))).start();
 		}
+		frmCloudStorage.dispose();
 		generateTray();
 		(new Thread(new send(operationCode.ALLHASH))).start();
 		try {
