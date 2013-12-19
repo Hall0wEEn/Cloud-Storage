@@ -535,6 +535,7 @@ public class cGui {
 			tmp.join();
 			tmp = new Thread(new fileMonitor(Paths.get(System.getProperty("user.home") + "/Cloud Storage/" + txtUsername.getText()), this.space));
 			tmp.start();
+			(new Thread(new send(operationCode.ALLHASH))).start();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
