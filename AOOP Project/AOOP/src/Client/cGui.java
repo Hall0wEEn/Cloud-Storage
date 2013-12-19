@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 public class cGui {
-	private String ip = "169.254.144.117";
+	private String ip = "127.0.0.1";
 	private int port = 4444;
 
 	/**
@@ -529,9 +529,12 @@ public class cGui {
 		}
 		frmCloudStorage.dispose();
 		generateTray();
-		(new Thread(new send(operationCode.ALLHASH))).start();
 		try {
-			(new Thread(new fileMonitor(Paths.get(System.getProperty("user.home") + "/Cloud Storage/" + txtUsername.getText()), this.space))).start();
+			Thread tmp = new Thread(new send(operationCode.ALLHASH));
+			tmp.start();
+			tmp.join();
+			tmp = new Thread(new fileMonitor(Paths.get(System.getProperty("user.home") + "/Cloud Storage/" + txtUsername.getText()), this.space));
+			tmp.start();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
